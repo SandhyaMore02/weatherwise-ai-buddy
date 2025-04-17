@@ -1,13 +1,33 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState } from "react";
+import MainLayout from "@/components/layout/MainLayout";
+import WeatherPage from "@/components/pages/WeatherPage";
+import OutfitPage from "@/components/pages/OutfitPage";
+import TravelPage from "@/components/pages/TravelPage";
+import MusicPage from "@/components/pages/MusicPage";
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState("weather");
+  
+  const renderContent = () => {
+    switch (activeTab) {
+      case "weather":
+        return <WeatherPage />;
+      case "outfit":
+        return <OutfitPage />;
+      case "travel":
+        return <TravelPage />;
+      case "music":
+        return <MusicPage />;
+      default:
+        return <WeatherPage />;
+    }
+  };
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <MainLayout activeTab={activeTab} onTabChange={setActiveTab}>
+      {renderContent()}
+    </MainLayout>
   );
 };
 
