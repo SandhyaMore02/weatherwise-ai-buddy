@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 
-const OPENWEATHER_API_KEY = localStorage.getItem('OPENWEATHER_API_KEY') || '';
+const OPENWEATHER_API_KEY = '86a262a5f35cb4ba95de2bf3a644a4ec';
 
 interface WeatherData {
   location: string;
@@ -13,10 +13,6 @@ interface WeatherData {
 }
 
 export const fetchWeatherByCity = async (city: string): Promise<WeatherData> => {
-  if (!OPENWEATHER_API_KEY) {
-    throw new Error('OpenWeatherMap API key is missing');
-  }
-
   try {
     const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${OPENWEATHER_API_KEY}&units=metric`);
     
@@ -33,3 +29,4 @@ export const fetchWeatherByCity = async (city: string): Promise<WeatherData> => 
     throw error;
   }
 };
+
