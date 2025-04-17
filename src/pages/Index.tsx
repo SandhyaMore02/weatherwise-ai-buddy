@@ -5,6 +5,7 @@ import WeatherPage from "@/components/pages/WeatherPage";
 import OutfitPage from "@/components/pages/OutfitPage";
 import TravelPage from "@/components/pages/TravelPage";
 import MusicPage from "@/components/pages/MusicPage";
+import SettingsPage from "@/components/pages/SettingsPage";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("weather");
@@ -19,6 +20,8 @@ const Index = () => {
         return <TravelPage />;
       case "music":
         return <MusicPage />;
+      case "settings":
+        return <SettingsPage />;
       default:
         return <WeatherPage />;
     }

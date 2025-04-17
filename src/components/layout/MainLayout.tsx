@@ -1,7 +1,7 @@
 
 import { ReactNode } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, Shirt, Compass, Music } from "lucide-react";
+import { Home, Shirt, Compass, Music, Settings } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 interface MainLayoutProps {
@@ -27,7 +27,7 @@ const MainLayout = ({ children, activeTab, onTabChange }: MainLayoutProps) => {
       
       <footer className="fixed bottom-0 left-0 right-0 bg-background border-t py-2 px-4">
         <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-          <TabsList className="w-full grid grid-cols-4 h-16">
+          <TabsList className="w-full grid grid-cols-5 h-16">
             <TabsTrigger value="weather" className="flex flex-col items-center gap-1 py-2 data-[state=active]:text-primary">
               <Home className="h-5 w-5" />
               <span className="text-xs">Weather</span>
@@ -43,6 +43,10 @@ const MainLayout = ({ children, activeTab, onTabChange }: MainLayoutProps) => {
             <TabsTrigger value="music" className="flex flex-col items-center gap-1 py-2 data-[state=active]:text-primary">
               <Music className="h-5 w-5" />
               <span className="text-xs">Music</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex flex-col items-center gap-1 py-2 data-[state=active]:text-primary">
+              <Settings className="h-5 w-5" />
+              <span className="text-xs">Settings</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>

@@ -3,26 +3,40 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Music, Play, Pause, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { 
+  Music, Play, Pause, SkipBack, SkipForward, 
+  Volume2, Search, Clock, Disc 
+} from "lucide-react";
+import { toast } from "sonner";
 
 // Mock data for music recommendations
 const musicRecommendations = {
   sunny: [
-    { title: "Walking on Sunshine", artist: "Katrina & The Waves", mood: "Upbeat" },
-    { title: "Good Day Sunshine", artist: "The Beatles", mood: "Cheerful" },
-    { title: "Here Comes the Sun", artist: "The Beatles", mood: "Uplifting" },
+    { id: "s1", title: "Walking on Sunshine", artist: "Katrina & The Waves", mood: "Upbeat", duration: "3:45" },
+    { id: "s2", title: "Good Day Sunshine", artist: "The Beatles", mood: "Cheerful", duration: "2:10" },
+    { id: "s3", title: "Here Comes the Sun", artist: "The Beatles", mood: "Uplifting", duration: "3:06" },
   ],
   cloudy: [
-    { title: "Riders on the Storm", artist: "The Doors", mood: "Atmospheric" },
-    { title: "Cloudbusting", artist: "Kate Bush", mood: "Dreamy" },
-    { title: "The Sound of Silence", artist: "Simon & Garfunkel", mood: "Contemplative" },
+    { id: "c1", title: "Riders on the Storm", artist: "The Doors", mood: "Atmospheric", duration: "7:10" },
+    { id: "c2", title: "Cloudbusting", artist: "Kate Bush", mood: "Dreamy", duration: "4:25" },
+    { id: "c3", title: "The Sound of Silence", artist: "Simon & Garfunkel", mood: "Contemplative", duration: "3:05" },
   ],
   rainy: [
-    { title: "Singing in the Rain", artist: "Gene Kelly", mood: "Playful" },
-    { title: "Rainy Day", artist: "Coldplay", mood: "Melancholic" },
-    { title: "Purple Rain", artist: "Prince", mood: "Emotional" },
+    { id: "r1", title: "Singing in the Rain", artist: "Gene Kelly", mood: "Playful", duration: "3:20" },
+    { id: "r2", title: "Rainy Day", artist: "Coldplay", mood: "Melancholic", duration: "4:15" },
+    { id: "r3", title: "Purple Rain", artist: "Prince", mood: "Emotional", duration: "8:40" },
   ],
 };
+
+// Mock search results
+const searchResults = [
+  { id: "sr1", title: "Imagine", artist: "John Lennon", mood: "Reflective", duration: "3:04" },
+  { id: "sr2", title: "Bohemian Rhapsody", artist: "Queen", mood: "Epic", duration: "5:55" },
+  { id: "sr3", title: "Billie Jean", artist: "Michael Jackson", mood: "Groovy", duration: "4:54" },
+  { id: "sr4", title: "Shape of You", artist: "Ed Sheeran", mood: "Upbeat", duration: "3:54" },
+  { id: "sr5", title: "Rolling in the Deep", artist: "Adele", mood: "Powerful", duration: "3:48" },
+];
 
 // For demo purposes, we'll use sunny as the current condition
 const currentCondition = "sunny";
@@ -32,6 +46,9 @@ const MusicPage = () => {
   const [currentSong, setCurrentSong] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState([75]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [playlistSongs, setPlaylistSongs] = useState(songs);
   
   // In a real app, this would be connected to actual audio files
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -42,11 +59,35 @@ const MusicPage = () => {
   };
   
   const nextSong = () => {
-    setCurrentSong((prev) => (prev + 1) % songs.length);
+    setCurrentSong((prev) => (prev + 1) % playlistSongs.length);
   };
   
   const prevSong = () => {
-    setCurrentSong((prev) => (prev - 1 + songs.length) % songs.length);
+    setCurrentSong((prev) => (prev - 1 + playlistSongs.length) % playlistSongs.length);
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim() === "") {
+      setPlaylistSongs(songs);
+      setIsSearching(false);
+      return;
+    }
+
+    // In a real app, this would call a music API with the search query
+    // For demo, use mock search results
+    setPlaylistSongs(searchResults);
+    setCurrentSong(0);
+    setIsPlaying(false);
+    setIsSearching(true);
+    toast.success(`Found ${searchResults.length} songs for "${searchQuery}"`);
+  };
+
+  const resetSearch = () => {
+    setSearchQuery("");
+    setPlaylistSongs(songs);
+    setCurrentSong(0);
+    setIsPlaying(false);
+    setIsSearching(false);
   };
   
   useEffect(() => {
@@ -59,28 +100,60 @@ const MusicPage = () => {
   
   return (
     <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
-        <Music className="h-6 w-6 text-primary" />
-        Music Recommendations
+      <h1 className="text-2xl font-bold flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Music className="h-6 w-6 text-primary" />
+          <span>Music</span>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => setIsSearching(!isSearching)}
+        >
+          <Search className="h-5 w-5" />
+        </Button>
       </h1>
+      
+      {isSearching && (
+        <div className="flex gap-2 items-center mb-4">
+          <Input
+            placeholder="Search for songs or artists..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button onClick={handleSearch}>Search</Button>
+          {playlistSongs !== songs && (
+            <Button variant="outline" onClick={resetSearch}>Reset</Button>
+          )}
+        </div>
+      )}
       
       <Card className="weather-card bg-gradient-to-br from-primary/20 to-primary/5">
         <CardContent className="p-6">
-          <h2 className="text-xl font-medium mb-4">Weather-Based Music</h2>
-          <p className="text-muted-foreground mb-6">
-            Here's some {songs[0].mood.toLowerCase()} music that matches today's {currentCondition} weather.
-          </p>
+          <h2 className="text-xl font-medium mb-4">
+            {playlistSongs === songs ? "Weather-Based Music" : "Search Results"}
+          </h2>
+          {playlistSongs === songs && (
+            <p className="text-muted-foreground mb-6">
+              Here's some {playlistSongs[0].mood.toLowerCase()} music that matches today's {currentCondition} weather.
+            </p>
+          )}
           
           <div className="bg-black/5 dark:bg-white/5 rounded-xl p-6 space-y-6">
             <div className="text-center">
               <div className="w-24 h-24 bg-primary/20 rounded-full mx-auto flex items-center justify-center mb-4">
-                <Music className="h-10 w-10 text-primary" />
+                <Disc className="h-10 w-10 text-primary animate-spin-slow" />
               </div>
-              <h3 className="text-lg font-medium">{songs[currentSong].title}</h3>
-              <p className="text-muted-foreground">{songs[currentSong].artist}</p>
+              <h3 className="text-lg font-medium">{playlistSongs[currentSong].title}</h3>
+              <p className="text-muted-foreground">{playlistSongs[currentSong].artist}</p>
+              <div className="flex items-center justify-center gap-2 mt-2 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                <span>{playlistSongs[currentSong].duration}</span>
+              </div>
             </div>
             
-            <Slider disabled defaultValue={[33]} max={100} step={1} className="w-full" />
+            <Slider disabled value={[33]} max={100} step={1} className="w-full" />
             
             <div className="flex items-center justify-center gap-4">
               <Button variant="ghost" size="icon" onClick={prevSong}>
@@ -118,10 +191,12 @@ const MusicPage = () => {
       </Card>
       
       <div className="space-y-3 mt-6">
-        <h2 className="text-xl font-medium">Playlist for {currentCondition} days</h2>
-        {songs.map((song, index) => (
+        <h2 className="text-xl font-medium">
+          {playlistSongs === songs ? `Playlist for ${currentCondition} days` : "Playlist"}
+        </h2>
+        {playlistSongs.map((song, index) => (
           <Card 
-            key={index} 
+            key={song.id} 
             className={`cursor-pointer ${index === currentSong ? 'border-primary' : ''}`}
             onClick={() => setCurrentSong(index)}
           >
@@ -130,13 +205,16 @@ const MusicPage = () => {
                 <h3 className={`font-medium ${index === currentSong ? 'text-primary' : ''}`}>{song.title}</h3>
                 <p className="text-sm text-muted-foreground">{song.artist}</p>
               </div>
-              {index === currentSong && isPlaying && (
-                <div className="flex space-x-1">
-                  <div className="w-1 h-4 bg-primary rounded-full animate-pulse"></div>
-                  <div className="w-1 h-6 bg-primary rounded-full animate-pulse"></div>
-                  <div className="w-1 h-3 bg-primary rounded-full animate-pulse"></div>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{song.duration}</span>
+                {index === currentSong && isPlaying && (
+                  <div className="flex space-x-1">
+                    <div className="w-1 h-4 bg-primary rounded-full animate-pulse"></div>
+                    <div className="w-1 h-6 bg-primary rounded-full animate-pulse"></div>
+                    <div className="w-1 h-3 bg-primary rounded-full animate-pulse"></div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}

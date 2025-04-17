@@ -1,7 +1,10 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Cloud, CloudRain, Sun, MapPin, Wind, Droplets } from "lucide-react";
+import { Cloud, CloudRain, Sun, MapPin, Wind, Droplets, Search } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 // Mock weather data for demo purposes
 const MOCK_WEATHER = {
@@ -15,6 +18,8 @@ const MOCK_WEATHER = {
 
 const WeatherPage = () => {
   const [weather, setWeather] = useState(MOCK_WEATHER);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   // In a real app, this would fetch from a weather API
   
@@ -43,13 +48,54 @@ const WeatherPage = () => {
         return "sunny-gradient text-white";
     }
   };
+
+  const handleSearch = () => {
+    // In a real app, this would call a weather API with the search query
+    if (searchQuery.trim() === "") {
+      toast.error("Please enter a location");
+      return;
+    }
+    
+    // Mock location change (in a real app, this would be API data)
+    setWeather({
+      ...weather,
+      location: searchQuery,
+      // Just for demo, randomly change weather condition when searching
+      condition: ["sunny", "cloudy", "rainy"][Math.floor(Math.random() * 3)]
+    });
+    
+    setSearchQuery("");
+    setIsSearchOpen(false);
+    toast.success(`Weather updated for ${searchQuery}`);
+  };
   
   return (
     <div className="p-4 space-y-6">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <MapPin className="h-4 w-4" />
-        <span>{weather.location}</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <MapPin className="h-4 w-4" />
+          <span>{weather.location}</span>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => setIsSearchOpen(!isSearchOpen)}
+        >
+          <Search className="h-5 w-5" />
+        </Button>
       </div>
+      
+      {isSearchOpen && (
+        <div className="flex gap-2 items-center">
+          <Input
+            placeholder="Enter city name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button onClick={handleSearch}>Search</Button>
+        </div>
+      )}
       
       <Card className={`weather-card ${getWeatherCardClass()}`}>
         <CardContent className="p-6 flex flex-col items-center space-y-4">
