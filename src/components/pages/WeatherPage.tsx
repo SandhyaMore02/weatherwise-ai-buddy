@@ -1,28 +1,44 @@
-
+import { useState, useEffect } from "react";
+import { fetchWeatherByCity } from "@/services/WeatherService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Cloud, CloudRain, Sun, MapPin, Wind, Droplets, Search } from "lucide-react";
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-// Mock weather data for demo purposes
-const MOCK_WEATHER = {
-  location: "San Francisco",
-  temperature: 24,
-  condition: "sunny", // sunny, cloudy, rainy
-  humidity: 65,
-  windSpeed: 12,
-  feelsLike: 26,
-};
-
 const WeatherPage = () => {
-  const [weather, setWeather] = useState(MOCK_WEATHER);
+  const [weather, setWeather] = useState({
+    location: "San Francisco",
+    temperature: 24,
+    condition: "sunny",
+    humidity: 65,
+    windSpeed: 12,
+    feelsLike: 26
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  
-  // In a real app, this would fetch from a weather API
-  
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSearch = async () => {
+    if (searchQuery.trim() === "") {
+      toast.error("Please enter a location");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const weatherData = await fetchWeatherByCity(searchQuery);
+      setWeather(weatherData);
+      setSearchQuery("");
+      setIsSearchOpen(false);
+      toast.success(`Weather updated for ${weatherData.location}`);
+    } catch (error) {
+      toast.error("Could not fetch weather. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getWeatherIcon = () => {
     switch (weather.condition) {
       case "sunny":
@@ -35,7 +51,7 @@ const WeatherPage = () => {
         return <Sun className="weather-icon text-yellow-500 animate-pulse-subtle" />;
     }
   };
-  
+
   const getWeatherCardClass = () => {
     switch (weather.condition) {
       case "sunny":
@@ -49,26 +65,6 @@ const WeatherPage = () => {
     }
   };
 
-  const handleSearch = () => {
-    // In a real app, this would call a weather API with the search query
-    if (searchQuery.trim() === "") {
-      toast.error("Please enter a location");
-      return;
-    }
-    
-    // Mock location change (in a real app, this would be API data)
-    setWeather({
-      ...weather,
-      location: searchQuery,
-      // Just for demo, randomly change weather condition when searching
-      condition: ["sunny", "cloudy", "rainy"][Math.floor(Math.random() * 3)]
-    });
-    
-    setSearchQuery("");
-    setIsSearchOpen(false);
-    toast.success(`Weather updated for ${searchQuery}`);
-  };
-  
   return (
     <div className="p-4 space-y-6">
       <div className="flex items-center justify-between">
