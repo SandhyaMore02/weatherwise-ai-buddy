@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { fetchWeatherByCity } from "@/services/WeatherService";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { toast } from "sonner";
 
 const WeatherPage = () => {
   const [weather, setWeather] = useState({
-    location: "San Francisco",
+    location: "Delhi",
     temperature: 24,
     condition: "sunny",
     humidity: 65,
@@ -18,6 +19,23 @@ const WeatherPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Load Delhi weather by default for Indian cities focus
+    fetchInitialWeather();
+  }, []);
+
+  const fetchInitialWeather = async () => {
+    try {
+      setIsLoading(true);
+      const weatherData = await fetchWeatherByCity("Delhi");
+      setWeather(weatherData);
+    } catch (error) {
+      toast.error("Could not fetch weather for Delhi. Please try a different city.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearch = async () => {
     if (searchQuery.trim() === "") {
@@ -32,8 +50,12 @@ const WeatherPage = () => {
       setSearchQuery("");
       setIsSearchOpen(false);
       toast.success(`Weather updated for ${weatherData.location}`);
-    } catch (error) {
-      toast.error("Could not fetch weather. Please try again.");
+    } catch (error: any) {
+      if (error.response && error.response.data && error.response.data.message === "city not found") {
+        toast.error(`City "${searchQuery}" not found. Please check the spelling and try again.`);
+      } else {
+        toast.error("Could not fetch weather data. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -41,12 +63,13 @@ const WeatherPage = () => {
 
   const getWeatherIcon = () => {
     switch (weather.condition) {
-      case "sunny":
-        return <Sun className="weather-icon text-yellow-500 animate-pulse-subtle" />;
-      case "cloudy":
+      case "clouds":
         return <Cloud className="weather-icon text-gray-500 animate-pulse-subtle" />;
-      case "rainy":
+      case "rain":
+      case "drizzle":
         return <CloudRain className="weather-icon text-blue-500 animate-pulse-subtle" />;
+      case "clear":
+        return <Sun className="weather-icon text-yellow-500 animate-pulse-subtle" />;
       default:
         return <Sun className="weather-icon text-yellow-500 animate-pulse-subtle" />;
     }
@@ -54,11 +77,12 @@ const WeatherPage = () => {
 
   const getWeatherCardClass = () => {
     switch (weather.condition) {
-      case "sunny":
+      case "clear":
         return "sunny-gradient text-white";
-      case "cloudy":
+      case "clouds":
         return "cloudy-gradient text-white";
-      case "rainy":
+      case "rain":
+      case "drizzle":  
         return "rainy-gradient text-white";
       default:
         return "sunny-gradient text-white";
@@ -71,6 +95,7 @@ const WeatherPage = () => {
         <div className="flex items-center gap-2 text-muted-foreground">
           <MapPin className="h-4 w-4" />
           <span>{weather.location}</span>
+          {isLoading && <span className="text-xs">(Loading...)</span>}
         </div>
         <Button 
           variant="ghost" 
@@ -84,12 +109,14 @@ const WeatherPage = () => {
       {isSearchOpen && (
         <div className="flex gap-2 items-center">
           <Input
-            placeholder="Enter city name..."
+            placeholder="Enter city name (e.g., Mumbai, Delhi, Bangalore)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <Button onClick={handleSearch}>Search</Button>
+          <Button onClick={handleSearch} disabled={isLoading}>
+            {isLoading ? "Searching..." : "Search"}
+          </Button>
         </div>
       )}
       
