@@ -71,3 +71,47 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Android Development Setup
+
+To run this app on Android:
+
+1. Prerequisites:
+   - Install [Android Studio](https://developer.android.com/studio)
+   - Install Android SDK (via Android Studio)
+   - Install Java Development Kit (JDK) 11 or newer
+
+2. Setup Steps:
+   ```bash
+   # Install dependencies
+   npm install
+
+   # Build the web app
+   npm run build
+
+   # Add Android platform
+   npx cap add android
+
+   # Sync web code to Android project
+   npx cap sync android
+
+   # Open in Android Studio
+   npx cap open android
+   ```
+
+3. Running the App:
+   - In Android Studio, click the "Run" button (green play icon)
+   - Select your target device (emulator or connected physical device)
+   - Wait for the app to build and launch
+
+4. Important Notes:
+   - Minimum Android SDK version: 21 (Android 5.0)
+   - Target Android SDK version: 33 (Android 13)
+   - The app requires internet permissions for weather data
+   - Enable USB debugging on your device for physical testing
+
+5. Troubleshooting:
+   - If Gradle sync fails, try "File > Invalidate Caches / Restart"
+   - Ensure your Android Studio and SDK tools are up to date
+   - Check that USB debugging is enabled on your physical device
+   - Verify internet connectivity for weather data fetching
