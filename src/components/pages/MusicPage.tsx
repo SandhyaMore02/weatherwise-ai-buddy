@@ -27,21 +27,32 @@ const musicRecommendations = {
     { id: "r2", title: "Rainy Day", artist: "Coldplay", mood: "Melancholic", duration: "4:15" },
     { id: "r3", title: "Purple Rain", artist: "Prince", mood: "Emotional", duration: "8:40" },
   ],
+  // Adding Indian songs
+  indian: [
+    { id: "i1", title: "Chaiyya Chaiyya", artist: "A.R. Rahman, Sukhwinder Singh", mood: "Energetic", duration: "6:54" },
+    { id: "i2", title: "Jai Ho", artist: "A.R. Rahman, Sukhwinder Singh", mood: "Uplifting", duration: "5:19" },
+    { id: "i3", title: "Tum Hi Ho", artist: "Arijit Singh", mood: "Romantic", duration: "4:22" },
+    { id: "i4", title: "Kesariya", artist: "Arijit Singh", mood: "Romantic", duration: "4:28" },
+    { id: "i5", title: "Kun Faya Kun", artist: "A.R. Rahman, Javed Ali", mood: "Spiritual", duration: "7:52" },
+  ],
 };
 
-// Mock search results
+// Mock search results with some Indian songs included
 const searchResults = [
   { id: "sr1", title: "Imagine", artist: "John Lennon", mood: "Reflective", duration: "3:04" },
   { id: "sr2", title: "Bohemian Rhapsody", artist: "Queen", mood: "Epic", duration: "5:55" },
   { id: "sr3", title: "Billie Jean", artist: "Michael Jackson", mood: "Groovy", duration: "4:54" },
   { id: "sr4", title: "Shape of You", artist: "Ed Sheeran", mood: "Upbeat", duration: "3:54" },
   { id: "sr5", title: "Rolling in the Deep", artist: "Adele", mood: "Powerful", duration: "3:48" },
+  // Indian songs added to search results
+  { id: "sr6", title: "Channa Mereya", artist: "Arijit Singh", mood: "Emotional", duration: "4:49" },
+  { id: "sr7", title: "Kal Ho Naa Ho", artist: "Sonu Nigam", mood: "Sentimental", duration: "5:21" },
+  { id: "sr8", title: "Senorita", artist: "Farhan Akhtar, Hrithik Roshan", mood: "Fun", duration: "3:49" },
 ];
 
-// For demo purposes, we'll use sunny as the current condition
-const currentCondition = "sunny";
-
 const MusicPage = () => {
+  // Add a condition option to show Indian songs
+  const [currentCondition, setCurrentCondition] = useState("sunny");
   const songs = musicRecommendations[currentCondition as keyof typeof musicRecommendations];
   const [currentSong, setCurrentSong] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -49,21 +60,58 @@ const MusicPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [playlistSongs, setPlaylistSongs] = useState(songs);
+  const [progress, setProgress] = useState([0]);
   
   // In a real app, this would be connected to actual audio files
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
+  // Set up an interval to simulate the progress of the song when playing
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev[0] >= 100) {
+            clearInterval(interval);
+            nextSong();
+            return [0];
+          }
+          return [prev[0] + 1];
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying]);
+  
   const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-    // In a real app, this would control the audio element
+    if (isPlaying) {
+      setIsPlaying(false);
+      toast.info("Music paused");
+    } else {
+      setIsPlaying(true);
+      toast.success(`Now playing: ${playlistSongs[currentSong].title}`);
+    }
   };
   
   const nextSong = () => {
     setCurrentSong((prev) => (prev + 1) % playlistSongs.length);
+    setProgress([0]);
+    if (isPlaying) {
+      toast.success(`Now playing: ${playlistSongs[(currentSong + 1) % playlistSongs.length].title}`);
+    }
   };
   
   const prevSong = () => {
     setCurrentSong((prev) => (prev - 1 + playlistSongs.length) % playlistSongs.length);
+    setProgress([0]);
+    if (isPlaying) {
+      const newIndex = (currentSong - 1 + playlistSongs.length) % playlistSongs.length;
+      toast.success(`Now playing: ${playlistSongs[newIndex].title}`);
+    }
   };
 
   const handleSearch = () => {
@@ -75,11 +123,18 @@ const MusicPage = () => {
 
     // In a real app, this would call a music API with the search query
     // For demo, use mock search results
-    setPlaylistSongs(searchResults);
+    const filteredResults = searchResults.filter(
+      song => 
+        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    setPlaylistSongs(filteredResults.length > 0 ? filteredResults : searchResults);
     setCurrentSong(0);
     setIsPlaying(false);
     setIsSearching(true);
-    toast.success(`Found ${searchResults.length} songs for "${searchQuery}"`);
+    setProgress([0]);
+    toast.success(`Found ${filteredResults.length > 0 ? filteredResults.length : searchResults.length} songs for "${searchQuery}"`);
   };
 
   const resetSearch = () => {
@@ -88,6 +143,16 @@ const MusicPage = () => {
     setCurrentSong(0);
     setIsPlaying(false);
     setIsSearching(false);
+    setProgress([0]);
+  };
+  
+  const changeCondition = (condition: string) => {
+    setCurrentCondition(condition);
+    setPlaylistSongs(musicRecommendations[condition as keyof typeof musicRecommendations]);
+    setCurrentSong(0);
+    setIsPlaying(false);
+    setIsSearching(false);
+    setProgress([0]);
   };
   
   useEffect(() => {
@@ -132,28 +197,38 @@ const MusicPage = () => {
       <Card className="weather-card bg-gradient-to-br from-primary/20 to-primary/5">
         <CardContent className="p-6">
           <h2 className="text-xl font-medium mb-4">
-            {playlistSongs === songs ? "Weather-Based Music" : "Search Results"}
+            {playlistSongs === songs ? 
+              (currentCondition === "indian" ? "Indian Music" : "Weather-Based Music") : 
+              "Search Results"}
           </h2>
           {playlistSongs === songs && (
             <p className="text-muted-foreground mb-6">
-              Here's some {playlistSongs[0].mood.toLowerCase()} music that matches today's {currentCondition} weather.
+              {currentCondition === "indian" 
+                ? "Enjoy some popular Indian music from various genres." 
+                : `Here's some ${playlistSongs[0]?.mood?.toLowerCase() || ''} music that matches today's ${currentCondition} weather.`}
             </p>
           )}
           
           <div className="bg-black/5 dark:bg-white/5 rounded-xl p-6 space-y-6">
             <div className="text-center">
               <div className="w-24 h-24 bg-primary/20 rounded-full mx-auto flex items-center justify-center mb-4">
-                <Disc className="h-10 w-10 text-primary animate-spin-slow" />
+                <Disc className={`h-10 w-10 text-primary ${isPlaying ? 'animate-spin-slow' : ''}`} />
               </div>
-              <h3 className="text-lg font-medium">{playlistSongs[currentSong].title}</h3>
-              <p className="text-muted-foreground">{playlistSongs[currentSong].artist}</p>
+              <h3 className="text-lg font-medium">{playlistSongs[currentSong]?.title || "Select a song"}</h3>
+              <p className="text-muted-foreground">{playlistSongs[currentSong]?.artist || ""}</p>
               <div className="flex items-center justify-center gap-2 mt-2 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                <span>{playlistSongs[currentSong].duration}</span>
+                <span>{playlistSongs[currentSong]?.duration || "0:00"}</span>
               </div>
             </div>
             
-            <Slider disabled value={[33]} max={100} step={1} className="w-full" />
+            <Slider 
+              value={progress} 
+              onValueChange={setProgress} 
+              max={100} 
+              step={1} 
+              className="w-full" 
+            />
             
             <div className="flex items-center justify-center gap-4">
               <Button variant="ghost" size="icon" onClick={prevSong}>
@@ -191,9 +266,46 @@ const MusicPage = () => {
       </Card>
       
       <div className="space-y-3 mt-6">
-        <h2 className="text-xl font-medium">
-          {playlistSongs === songs ? `Playlist for ${currentCondition} days` : "Playlist"}
-        </h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-medium">
+            {playlistSongs === songs ? 
+              (currentCondition === "indian" ? "Indian Playlist" : `Playlist for ${currentCondition} days`) : 
+              "Playlist"}
+          </h2>
+          
+          {/* Mood/Genre Selector */}
+          <div className="flex gap-2">
+            <Button 
+              variant={currentCondition === "indian" ? "default" : "outline"}
+              size="sm"
+              onClick={() => changeCondition("indian")}
+            >
+              Indian
+            </Button>
+            <Button 
+              variant={currentCondition === "sunny" ? "default" : "outline"}
+              size="sm"
+              onClick={() => changeCondition("sunny")}
+            >
+              Sunny
+            </Button>
+            <Button 
+              variant={currentCondition === "cloudy" ? "default" : "outline"}
+              size="sm"
+              onClick={() => changeCondition("cloudy")}
+            >
+              Cloudy
+            </Button>
+            <Button 
+              variant={currentCondition === "rainy" ? "default" : "outline"}
+              size="sm"
+              onClick={() => changeCondition("rainy")}
+            >
+              Rainy
+            </Button>
+          </div>
+        </div>
+        
         {playlistSongs.map((song, index) => (
           <Card 
             key={song.id} 
