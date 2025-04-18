@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,31 +26,24 @@ const musicRecommendations = {
     { id: "r2", title: "Rainy Day", artist: "Coldplay", mood: "Melancholic", duration: "4:15" },
     { id: "r3", title: "Purple Rain", artist: "Prince", mood: "Emotional", duration: "8:40" },
   ],
-  // Adding Indian songs
-  indian: [
-    { id: "i1", title: "Chaiyya Chaiyya", artist: "A.R. Rahman, Sukhwinder Singh", mood: "Energetic", duration: "6:54" },
-    { id: "i2", title: "Jai Ho", artist: "A.R. Rahman, Sukhwinder Singh", mood: "Uplifting", duration: "5:19" },
-    { id: "i3", title: "Tum Hi Ho", artist: "Arijit Singh", mood: "Romantic", duration: "4:22" },
-    { id: "i4", title: "Kesariya", artist: "Arijit Singh", mood: "Romantic", duration: "4:28" },
-    { id: "i5", title: "Kun Faya Kun", artist: "A.R. Rahman, Javed Ali", mood: "Spiritual", duration: "7:52" },
-  ],
 };
 
-// Mock search results with some Indian songs included
-const searchResults = [
+// Combined array of search results including songs from all categories
+const allSongs = [
+  ...musicRecommendations.sunny,
+  ...musicRecommendations.cloudy,
+  ...musicRecommendations.rainy,
   { id: "sr1", title: "Imagine", artist: "John Lennon", mood: "Reflective", duration: "3:04" },
   { id: "sr2", title: "Bohemian Rhapsody", artist: "Queen", mood: "Epic", duration: "5:55" },
   { id: "sr3", title: "Billie Jean", artist: "Michael Jackson", mood: "Groovy", duration: "4:54" },
   { id: "sr4", title: "Shape of You", artist: "Ed Sheeran", mood: "Upbeat", duration: "3:54" },
   { id: "sr5", title: "Rolling in the Deep", artist: "Adele", mood: "Powerful", duration: "3:48" },
-  // Indian songs added to search results
   { id: "sr6", title: "Channa Mereya", artist: "Arijit Singh", mood: "Emotional", duration: "4:49" },
   { id: "sr7", title: "Kal Ho Naa Ho", artist: "Sonu Nigam", mood: "Sentimental", duration: "5:21" },
   { id: "sr8", title: "Senorita", artist: "Farhan Akhtar, Hrithik Roshan", mood: "Fun", duration: "3:49" },
 ];
 
 const MusicPage = () => {
-  // Add a condition option to show Indian songs
   const [currentCondition, setCurrentCondition] = useState("sunny");
   const songs = musicRecommendations[currentCondition as keyof typeof musicRecommendations];
   const [currentSong, setCurrentSong] = useState(0);
@@ -62,10 +54,8 @@ const MusicPage = () => {
   const [playlistSongs, setPlaylistSongs] = useState(songs);
   const [progress, setProgress] = useState([0]);
   
-  // In a real app, this would be connected to actual audio files
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
-  // Set up an interval to simulate the progress of the song when playing
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     
@@ -121,20 +111,24 @@ const MusicPage = () => {
       return;
     }
 
-    // In a real app, this would call a music API with the search query
-    // For demo, use mock search results
-    const filteredResults = searchResults.filter(
+    const filteredResults = allSongs.filter(
       song => 
         song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+        song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        song.mood.toLowerCase().includes(searchQuery.toLowerCase())
     );
     
-    setPlaylistSongs(filteredResults.length > 0 ? filteredResults : searchResults);
+    if (filteredResults.length === 0) {
+      toast.error("No songs found matching your search");
+      return;
+    }
+    
+    setPlaylistSongs(filteredResults);
     setCurrentSong(0);
     setIsPlaying(false);
     setIsSearching(true);
     setProgress([0]);
-    toast.success(`Found ${filteredResults.length > 0 ? filteredResults.length : searchResults.length} songs for "${searchQuery}"`);
+    toast.success(`Found ${filteredResults.length} songs matching "${searchQuery}"`);
   };
 
   const resetSearch = () => {
@@ -156,7 +150,6 @@ const MusicPage = () => {
   };
   
   useEffect(() => {
-    // Reset play state when changing songs
     if (isPlaying) {
       setIsPlaying(false);
       setTimeout(() => setIsPlaying(true), 100);
@@ -182,7 +175,7 @@ const MusicPage = () => {
       {isSearching && (
         <div className="flex gap-2 items-center mb-4">
           <Input
-            placeholder="Search for songs or artists..."
+            placeholder="Search by song title, artist, or mood..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -198,14 +191,12 @@ const MusicPage = () => {
         <CardContent className="p-6">
           <h2 className="text-xl font-medium mb-4">
             {playlistSongs === songs ? 
-              (currentCondition === "indian" ? "Indian Music" : "Weather-Based Music") : 
+              `${currentCondition.charAt(0).toUpperCase() + currentCondition.slice(1)} Weather Music` : 
               "Search Results"}
           </h2>
           {playlistSongs === songs && (
             <p className="text-muted-foreground mb-6">
-              {currentCondition === "indian" 
-                ? "Enjoy some popular Indian music from various genres." 
-                : `Here's some ${playlistSongs[0]?.mood?.toLowerCase() || ''} music that matches today's ${currentCondition} weather.`}
+              Here's some {playlistSongs[0]?.mood?.toLowerCase() || ''} music that matches today's {currentCondition} weather.
             </p>
           )}
           
@@ -269,19 +260,11 @@ const MusicPage = () => {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-medium">
             {playlistSongs === songs ? 
-              (currentCondition === "indian" ? "Indian Playlist" : `Playlist for ${currentCondition} days`) : 
+              `Playlist for ${currentCondition} days` : 
               "Playlist"}
           </h2>
           
-          {/* Mood/Genre Selector */}
           <div className="flex gap-2">
-            <Button 
-              variant={currentCondition === "indian" ? "default" : "outline"}
-              size="sm"
-              onClick={() => changeCondition("indian")}
-            >
-              Indian
-            </Button>
             <Button 
               variant={currentCondition === "sunny" ? "default" : "outline"}
               size="sm"
