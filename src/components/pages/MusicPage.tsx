@@ -3,44 +3,44 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { 
   Music, Play, Pause, SkipBack, SkipForward, 
   Volume2, Search, Clock, Disc 
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Mock data for music recommendations
 const musicRecommendations = {
   sunny: [
-    { id: "s1", title: "Walking on Sunshine", artist: "Katrina & The Waves", mood: "Upbeat", duration: "3:45" },
-    { id: "s2", title: "Good Day Sunshine", artist: "The Beatles", mood: "Cheerful", duration: "2:10" },
-    { id: "s3", title: "Here Comes the Sun", artist: "The Beatles", mood: "Uplifting", duration: "3:06" },
+    { id: "s1", title: "Chaleya", artist: "Arijit Singh", mood: "Romantic", duration: "3:45", audio: "/path/to/audio.mp3" },
+    { id: "s2", title: "Tum Hi Ho", artist: "Arijit Singh", mood: "Love", duration: "4:22", audio: "/path/to/audio.mp3" },
+    { id: "s3", title: "Kesariya", artist: "Arijit Singh", mood: "Uplifting", duration: "4:28", audio: "/path/to/audio.mp3" },
   ],
   cloudy: [
-    { id: "c1", title: "Riders on the Storm", artist: "The Doors", mood: "Atmospheric", duration: "7:10" },
-    { id: "c2", title: "Cloudbusting", artist: "Kate Bush", mood: "Dreamy", duration: "4:25" },
-    { id: "c3", title: "The Sound of Silence", artist: "Simon & Garfunkel", mood: "Contemplative", duration: "3:05" },
+    { id: "c1", title: "Tu Hai Ki Nahi", artist: "Ankit Tiwari", mood: "Melancholic", duration: "5:10", audio: "/path/to/audio.mp3" },
+    { id: "c2", title: "Tum Mile", artist: "Pritam", mood: "Romantic", duration: "4:25", audio: "/path/to/audio.mp3" },
+    { id: "c3", title: "Phir Le Aya Dil", artist: "Arijit Singh", mood: "Soulful", duration: "4:45", audio: "/path/to/audio.mp3" },
   ],
   rainy: [
-    { id: "r1", title: "Singing in the Rain", artist: "Gene Kelly", mood: "Playful", duration: "3:20" },
-    { id: "r2", title: "Rainy Day", artist: "Coldplay", mood: "Melancholic", duration: "4:15" },
-    { id: "r3", title: "Purple Rain", artist: "Prince", mood: "Emotional", duration: "8:40" },
+    { id: "r1", title: "Barish Ban Jana", artist: "Stebin Ben", mood: "Romantic", duration: "3:48", audio: "/path/to/audio.mp3" },
+    { id: "r2", title: "Baarish", artist: "Ash King", mood: "Romantic", duration: "4:15", audio: "/path/to/audio.mp3" },
+    { id: "r3", title: "Rim Jhim", artist: "Jubin Nautiyal", mood: "Peaceful", duration: "4:10", audio: "/path/to/audio.mp3" },
   ],
 };
 
-// Combined array of search results including songs from all categories
+const additionalSongs = [
+  { id: "i1", title: "Raataan Lambiyan", artist: "Jubin Nautiyal", mood: "Romantic", duration: "3:50", audio: "/path/to/audio.mp3" },
+  { id: "i2", title: "Mehrma", artist: "Darshan Raval", mood: "Soulful", duration: "4:12", audio: "/path/to/audio.mp3" },
+  { id: "i3", title: "Nainowale Ne", artist: "Neeti Mohan", mood: "Classical", duration: "4:30", audio: "/path/to/audio.mp3" },
+  { id: "i4", title: "Manike", artist: "Yohani", mood: "Dance", duration: "3:30", audio: "/path/to/audio.mp3" },
+  { id: "i5", title: "Pasoori", artist: "Ali Sethi", mood: "Fusion", duration: "3:44", audio: "/path/to/audio.mp3" },
+];
+
 const allSongs = [
   ...musicRecommendations.sunny,
   ...musicRecommendations.cloudy,
   ...musicRecommendations.rainy,
-  { id: "sr1", title: "Imagine", artist: "John Lennon", mood: "Reflective", duration: "3:04" },
-  { id: "sr2", title: "Bohemian Rhapsody", artist: "Queen", mood: "Epic", duration: "5:55" },
-  { id: "sr3", title: "Billie Jean", artist: "Michael Jackson", mood: "Groovy", duration: "4:54" },
-  { id: "sr4", title: "Shape of You", artist: "Ed Sheeran", mood: "Upbeat", duration: "3:54" },
-  { id: "sr5", title: "Rolling in the Deep", artist: "Adele", mood: "Powerful", duration: "3:48" },
-  { id: "sr6", title: "Channa Mereya", artist: "Arijit Singh", mood: "Emotional", duration: "4:49" },
-  { id: "sr7", title: "Kal Ho Naa Ho", artist: "Sonu Nigam", mood: "Sentimental", duration: "5:21" },
-  { id: "sr8", title: "Senorita", artist: "Farhan Akhtar, Hrithik Roshan", mood: "Fun", duration: "3:49" },
+  ...additionalSongs,
 ];
 
 const MusicPage = () => {
@@ -53,9 +53,25 @@ const MusicPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [playlistSongs, setPlaylistSongs] = useState(songs);
   const [progress, setProgress] = useState([0]);
-  
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  
+
+  useEffect(() => {
+    audioRef.current = new Audio();
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume[0] / 100;
+    }
+  }, [volume]);
+
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     
@@ -76,17 +92,28 @@ const MusicPage = () => {
       if (interval) clearInterval(interval);
     };
   }, [isPlaying]);
-  
+
   const togglePlay = () => {
+    if (!audioRef.current) return;
+
     if (isPlaying) {
+      audioRef.current.pause();
       setIsPlaying(false);
       toast.info("Music paused");
     } else {
-      setIsPlaying(true);
-      toast.success(`Now playing: ${playlistSongs[currentSong].title}`);
+      audioRef.current.src = playlistSongs[currentSong].audio;
+      audioRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+          toast.success(`Now playing: ${playlistSongs[currentSong].title}`);
+        })
+        .catch((error) => {
+          console.error("Audio playback failed:", error);
+          toast.error("Could not play audio. Please try again.");
+        });
     }
   };
-  
+
   const nextSong = () => {
     setCurrentSong((prev) => (prev + 1) % playlistSongs.length);
     setProgress([0]);
@@ -94,7 +121,7 @@ const MusicPage = () => {
       toast.success(`Now playing: ${playlistSongs[(currentSong + 1) % playlistSongs.length].title}`);
     }
   };
-  
+
   const prevSong = () => {
     setCurrentSong((prev) => (prev - 1 + playlistSongs.length) % playlistSongs.length);
     setProgress([0]);
@@ -111,11 +138,10 @@ const MusicPage = () => {
       return;
     }
 
-    const filteredResults = allSongs.filter(
-      song => 
-        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.mood.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredResults = allSongs.filter(song => 
+      song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      song.mood.toLowerCase().includes(searchQuery.toLowerCase())
     );
     
     if (filteredResults.length === 0) {
@@ -139,7 +165,7 @@ const MusicPage = () => {
     setIsSearching(false);
     setProgress([0]);
   };
-  
+
   const changeCondition = (condition: string) => {
     setCurrentCondition(condition);
     setPlaylistSongs(musicRecommendations[condition as keyof typeof musicRecommendations]);
@@ -148,14 +174,14 @@ const MusicPage = () => {
     setIsSearching(false);
     setProgress([0]);
   };
-  
+
   useEffect(() => {
     if (isPlaying) {
       setIsPlaying(false);
       setTimeout(() => setIsPlaying(true), 100);
     }
   }, [currentSong]);
-  
+
   return (
     <div className="p-4 space-y-6">
       <h1 className="text-2xl font-bold flex items-center justify-between">
