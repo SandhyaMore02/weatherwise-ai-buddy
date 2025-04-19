@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Compass, Umbrella, Bus, Bike, AlertTriangle, Search, MapPin } from "lucide-react";
@@ -103,7 +102,7 @@ const cityRecommendations = {
     { icon: "🏛️", name: "Capitol Complex", description: "Government buildings designed by Le Corbusier" },
     { icon: "🌺", name: "Rose Garden", description: "Asia's largest rose garden" },
     { icon: "🛍️", name: "Sector 17 Market", description: "Popular shopping area" }
-  },
+  ],
   "ahmedabad": [
     { icon: "🕌", name: "Sabarmati Ashram", description: "Gandhi's residence for many years" },
     { icon: "🌉", name: "Sabarmati Riverfront", description: "Urban development project along the river" },
