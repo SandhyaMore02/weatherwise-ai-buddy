@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,37 +10,37 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Updated music recommendations with working audio URLs
+// Updated music recommendations with reliable audio URLs
 const musicRecommendations = {
   sunny: [
-    { id: "s1", title: "Chaleya", artist: "Arijit Singh", mood: "Romantic", duration: "3:45", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Jawan/Chaleya%20-%20Jawan%20128%20Kbps.mp3" },
-    { id: "s2", title: "Kesariya", artist: "Arijit Singh", mood: "Uplifting", duration: "4:28", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Brahmastra/Kesariya%20-%20Brahmastra%20128%20Kbps.mp3" },
-    { id: "s3", title: "Jhoome Jo Pathaan", artist: "Arijit Singh", mood: "Dance", duration: "3:22", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Pathaan/Jhoome%20Jo%20Pathaan%20-%20Pathaan%20128%20Kbps.mp3" },
+    { id: "s1", title: "Summer Vibes", artist: "Chill Wave", mood: "Upbeat", duration: "3:45", audio: "https://assets.mixkit.co/music/preview/mixkit-sun-and-his-daughter-580.mp3" },
+    { id: "s2", title: "Beach Walk", artist: "Ocean Sounds", mood: "Relaxing", duration: "4:28", audio: "https://assets.mixkit.co/music/preview/mixkit-driving-ambition-32.mp3" },
+    { id: "s3", title: "Sunny Day", artist: "Summer Beats", mood: "Happy", duration: "3:22", audio: "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" },
   ],
   cloudy: [
-    { id: "c1", title: "Tum Hi Ho", artist: "Arijit Singh", mood: "Romantic", duration: "4:22", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Aashiqui%202/Tum%20Hi%20Ho%20-%20Aashiqui%202%20128%20Kbps.mp3" },
-    { id: "c2", title: "Phir Le Aya Dil", artist: "Arijit Singh", mood: "Soulful", duration: "4:45", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Barfi/Phir%20Le%20Aya%20Dil%20-%20Barfi%20128%20Kbps.mp3" },
-    { id: "c3", title: "Manike", artist: "Yohani", mood: "Dance", duration: "3:30", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Thank%20God/Manike%20-%20Thank%20God%20128%20Kbps.mp3" },
+    { id: "c1", title: "Cloudy Memories", artist: "Ambient Dreams", mood: "Melancholic", duration: "4:22", audio: "https://assets.mixkit.co/music/preview/mixkit-dreaming-big-31.mp3" },
+    { id: "c2", title: "Grey Skies", artist: "Soft Piano", mood: "Calm", duration: "4:45", audio: "https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3" },
+    { id: "c3", title: "Gentle Rain", artist: "Nature Sounds", mood: "Peaceful", duration: "3:30", audio: "https://assets.mixkit.co/music/preview/mixkit-deep-meditation-56.mp3" },
   ],
   rainy: [
-    { id: "r1", title: "Baarish Ban Jana", artist: "Stebin Ben", mood: "Romantic", duration: "3:48", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Baarish%20Ban%20Jaana/Baarish%20Ban%20Jaana%20-%20Baarish%20Ban%20Jaana%20128%20Kbps.mp3" },
-    { id: "r2", title: "Baarish", artist: "Ash King", mood: "Romantic", duration: "4:15", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Half%20Girlfriend/Baarish%20-%20Half%20Girlfriend%20128%20Kbps.mp3" },
-    { id: "r3", title: "Rim Jhim", artist: "Jubin Nautiyal", mood: "Peaceful", duration: "4:10", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Rim%20Jhim/Rim%20Jhim%20-%20Rim%20Jhim%20128%20Kbps.mp3" },
+    { id: "r1", title: "Rain Drops", artist: "Water Sounds", mood: "Relaxing", duration: "3:48", audio: "https://assets.mixkit.co/music/preview/mixkit-raising-me-higher-34.mp3" },
+    { id: "r2", title: "Thunderstorm", artist: "Weather Beats", mood: "Dramatic", duration: "4:15", audio: "https://assets.mixkit.co/music/preview/mixkit-ancient-times-483.mp3" },
+    { id: "r3", title: "Rainy Jazz", artist: "Cozy Notes", mood: "Soothing", duration: "4:10", audio: "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3" },
   ],
 };
 
-// More Indian songs from various genres
+// Additional songs from various genres
 const additionalSongs = [
-  { id: "i1", title: "Raataan Lambiyan", artist: "Jubin Nautiyal", mood: "Romantic", duration: "3:50", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Shershaah/Raataan%20Lambiyan%20-%20Shershaah%20128%20Kbps.mp3" },
-  { id: "i2", title: "Tere Vaaste", artist: "Arijit Singh", mood: "Romantic", duration: "3:25", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Zara%20Hatke%20Zara%20Bachke/Tere%20Vaaste%20-%20Zara%20Hatke%20Zara%20Bachke%20128%20Kbps.mp3" },
-  { id: "i3", title: "O Bedardeya", artist: "Arijit Singh", mood: "Sad", duration: "4:01", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Tu%20Jhoothi%20Main%20Makkaar/O%20Bedardeya%20-%20Tu%20Jhoothi%20Main%20Makkaar%20128%20Kbps.mp3" },
-  { id: "i4", title: "Pasoori Nu", artist: "Arijit Singh", mood: "Fusion", duration: "3:12", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Satyaprem%20Ki%20Katha/Pasoori%20Nu%20-%20Satyaprem%20Ki%20Katha%20128%20Kbps.mp3" },
-  { id: "i5", title: "Heeriye", artist: "Arijit Singh", mood: "Upbeat", duration: "2:41", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Heeriye/Heeriye%20-%20Heeriye%20128%20Kbps.mp3" },
-  { id: "i6", title: "Kaavaalaa", artist: "Shilpa Rao", mood: "Dance", duration: "3:18", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Jailer/Kaavaalaa%20-%20Jailer%20128%20Kbps.mp3" },
-  { id: "i7", title: "Apna Bana Le", artist: "Arijit Singh", mood: "Romantic", duration: "4:22", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Bhediya/Apna%20Bana%20Le%20-%20Bhediya%20128%20Kbps.mp3" },
-  { id: "i8", title: "What Jhumka", artist: "Arijit Singh", mood: "Dance", duration: "3:19", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Rocky%20Aur%20Rani%20Kii%20Prem%20Kahaani/What%20Jhumka%20-%20Rocky%20Aur%20Rani%20Kii%20Prem%20Kahaani%20128%20Kbps.mp3" },
-  { id: "i9", title: "Chammak Challo", artist: "Akon", mood: "Dance", duration: "3:43", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Ra.One/Chammak%20Challo%20-%20Ra.One%20128%20Kbps.mp3" },
-  { id: "i10", title: "Chaleya", artist: "Arijit Singh", mood: "Romantic", duration: "3:21", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Jawan/Chaleya%20-%20Jawan%20128%20Kbps.mp3" },
+  { id: "a1", title: "Electric Dreams", artist: "Synth Wave", mood: "Energetic", duration: "3:50", audio: "https://assets.mixkit.co/music/preview/mixkit-spirit-of-the-dragon-545.mp3" },
+  { id: "a2", title: "Acoustic Sunset", artist: "Guitar Dreams", mood: "Relaxing", duration: "3:25", audio: "https://assets.mixkit.co/music/preview/mixkit-hip-hop-03-739.mp3" },
+  { id: "a3", title: "Jazz Cafe", artist: "Smooth Quartet", mood: "Chill", duration: "4:01", audio: "https://assets.mixkit.co/music/preview/mixkit-feeling-happy-5.mp3" },
+  { id: "a4", title: "Lo-Fi Study", artist: "Beat Maker", mood: "Focus", duration: "3:12", audio: "https://assets.mixkit.co/music/preview/mixkit-getting-ready-46.mp3" },
+  { id: "a5", title: "Pop Anthem", artist: "Chart Toppers", mood: "Upbeat", duration: "2:41", audio: "https://assets.mixkit.co/music/preview/mixkit-hazy-after-hours-132.mp3" },
+  { id: "a6", title: "Dance Floor", artist: "Party Mix", mood: "Dance", duration: "3:18", audio: "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" },
+  { id: "a7", title: "Classical Morning", artist: "String Ensemble", mood: "Peaceful", duration: "4:22", audio: "https://assets.mixkit.co/music/preview/mixkit-life-is-a-dream-837.mp3" },
+  { id: "a8", title: "Rock Anthem", artist: "Electric Guitars", mood: "Energetic", duration: "3:19", audio: "https://assets.mixkit.co/music/preview/mixkit-sports-highlights-51.mp3" },
+  { id: "a9", title: "Electronic Pulse", artist: "Digital Artist", mood: "Dance", duration: "3:43", audio: "https://assets.mixkit.co/music/preview/mixkit-downtown-traffic-168.mp3" },
+  { id: "a10", title: "Ambient Waves", artist: "Sleep Sounds", mood: "Relaxing", duration: "3:21", audio: "https://assets.mixkit.co/music/preview/mixkit-games-worldbeat-466.mp3" },
 ];
 
 const allSongs = [
@@ -76,6 +75,11 @@ const MusicPage = () => {
       audioRef.current.addEventListener('ended', handleSongEnd);
       audioRef.current.addEventListener('error', handleAudioError);
       audioRef.current.volume = volume[0] / 100;
+    }
+    
+    // Initial audio load
+    if (playlistSongs.length > 0) {
+      loadAudio();
     }
     
     return () => {
@@ -117,10 +121,12 @@ const MusicPage = () => {
     if (playlistSongs.length > 0 && audioRef.current) {
       loadAudio();
       if (isPlaying) {
-        playAudio();
+        setTimeout(() => {
+          playAudio();
+        }, 100); // Small delay to ensure audio is loaded
       }
     }
-  }, [currentSong]);
+  }, [currentSong, playlistSongs]);
 
   const handleMetadataLoaded = () => {
     if (audioRef.current) {
@@ -145,33 +151,55 @@ const MusicPage = () => {
   };
 
   const handleAudioError = (e: any) => {
-    console.error("Audio error:", e);
+    console.error("Audio playback error:", e);
     toast.error("Could not play this song. Trying next song...");
-    nextSong();
+    
+    // Try next song after a short delay
+    setTimeout(() => {
+      nextSong();
+    }, 500);
   };
 
   const loadAudio = () => {
     if (!audioRef.current || !playlistSongs[currentSong]) return;
     
-    const audioSrc = playlistSongs[currentSong].audio;
-    audioRef.current.src = audioSrc;
-    audioRef.current.load();
+    try {
+      const audioSrc = playlistSongs[currentSong].audio;
+      audioRef.current.src = audioSrc;
+      audioRef.current.load();
+      console.log("Loading audio:", audioSrc);
+    } catch (error) {
+      console.error("Error loading audio:", error);
+      toast.error("Error loading audio");
+    }
   };
 
   const playAudio = () => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !playlistSongs[currentSong]) return;
     
-    audioRef.current.play()
-      .then(() => {
-        setIsPlaying(true);
-        toast.success(`Now playing: ${playlistSongs[currentSong].title}`);
-      })
-      .catch((error) => {
-        console.error("Audio playback failed:", error);
-        toast.error("Could not play audio. Trying another song...");
-        setIsPlaying(false);
-        nextSong();
-      });
+    // Reset the audio if it was at the end
+    if (audioRef.current.currentTime >= audioRef.current.duration) {
+      audioRef.current.currentTime = 0;
+    }
+    
+    const playPromise = audioRef.current.play();
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          setIsPlaying(true);
+          toast.success(`Now playing: ${playlistSongs[currentSong].title}`);
+        })
+        .catch((error) => {
+          console.error("Audio playback failed:", error);
+          toast.error("Could not play audio. Trying another song...");
+          setIsPlaying(false);
+          // Try next song after a short delay
+          setTimeout(() => {
+            nextSong();
+          }, 500);
+        });
+    }
   };
 
   const togglePlay = () => {
@@ -263,7 +291,7 @@ const MusicPage = () => {
       <h1 className="text-2xl font-bold flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Music className="h-6 w-6 text-primary" />
-          <span>Indian Music</span>
+          <span>Music</span>
         </div>
         <Button 
           variant="ghost" 
@@ -298,7 +326,7 @@ const MusicPage = () => {
           </h2>
           {playlistSongs === songs && (
             <p className="text-muted-foreground mb-6">
-              Here's some {playlistSongs[0]?.mood?.toLowerCase() || ''} Bollywood music that matches today's {currentCondition} weather.
+              Here's some {playlistSongs[0]?.mood?.toLowerCase() || ''} music that matches today's {currentCondition} weather.
             </p>
           )}
           
