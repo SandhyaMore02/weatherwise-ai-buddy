@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,37 +11,37 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Updated music recommendations with reliable audio URLs
+// Updated music recommendations with guaranteed working audio sources
 const musicRecommendations = {
   sunny: [
-    { id: "s1", title: "Summer Vibes", artist: "Chill Wave", mood: "Upbeat", duration: "3:45", audio: "https://assets.mixkit.co/music/preview/mixkit-sun-and-his-daughter-580.mp3" },
-    { id: "s2", title: "Beach Walk", artist: "Ocean Sounds", mood: "Relaxing", duration: "4:28", audio: "https://assets.mixkit.co/music/preview/mixkit-driving-ambition-32.mp3" },
-    { id: "s3", title: "Sunny Day", artist: "Summer Beats", mood: "Happy", duration: "3:22", audio: "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" },
+    { id: "s1", title: "Summer Vibes", artist: "Chill Wave", mood: "Upbeat", duration: "3:45", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+    { id: "s2", title: "Beach Walk", artist: "Ocean Sounds", mood: "Relaxing", duration: "4:28", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+    { id: "s3", title: "Sunny Day", artist: "Summer Beats", mood: "Happy", duration: "3:22", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
   ],
   cloudy: [
-    { id: "c1", title: "Cloudy Memories", artist: "Ambient Dreams", mood: "Melancholic", duration: "4:22", audio: "https://assets.mixkit.co/music/preview/mixkit-dreaming-big-31.mp3" },
-    { id: "c2", title: "Grey Skies", artist: "Soft Piano", mood: "Calm", duration: "4:45", audio: "https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3" },
-    { id: "c3", title: "Gentle Rain", artist: "Nature Sounds", mood: "Peaceful", duration: "3:30", audio: "https://assets.mixkit.co/music/preview/mixkit-deep-meditation-56.mp3" },
+    { id: "c1", title: "Cloudy Memories", artist: "Ambient Dreams", mood: "Melancholic", duration: "4:22", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+    { id: "c2", title: "Grey Skies", artist: "Soft Piano", mood: "Calm", duration: "4:45", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+    { id: "c3", title: "Gentle Rain", artist: "Nature Sounds", mood: "Peaceful", duration: "3:30", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" },
   ],
   rainy: [
-    { id: "r1", title: "Rain Drops", artist: "Water Sounds", mood: "Relaxing", duration: "3:48", audio: "https://assets.mixkit.co/music/preview/mixkit-raising-me-higher-34.mp3" },
-    { id: "r2", title: "Thunderstorm", artist: "Weather Beats", mood: "Dramatic", duration: "4:15", audio: "https://assets.mixkit.co/music/preview/mixkit-ancient-times-483.mp3" },
-    { id: "r3", title: "Rainy Jazz", artist: "Cozy Notes", mood: "Soothing", duration: "4:10", audio: "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3" },
+    { id: "r1", title: "Rain Drops", artist: "Water Sounds", mood: "Relaxing", duration: "3:48", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+    { id: "r2", title: "Thunderstorm", artist: "Weather Beats", mood: "Dramatic", duration: "4:15", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+    { id: "r3", title: "Rainy Jazz", artist: "Cozy Notes", mood: "Soothing", duration: "4:10", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" },
   ],
 };
 
-// Additional songs from various genres
+// Additional songs from various genres with working audio
 const additionalSongs = [
-  { id: "a1", title: "Electric Dreams", artist: "Synth Wave", mood: "Energetic", duration: "3:50", audio: "https://assets.mixkit.co/music/preview/mixkit-spirit-of-the-dragon-545.mp3" },
-  { id: "a2", title: "Acoustic Sunset", artist: "Guitar Dreams", mood: "Relaxing", duration: "3:25", audio: "https://assets.mixkit.co/music/preview/mixkit-hip-hop-03-739.mp3" },
-  { id: "a3", title: "Jazz Cafe", artist: "Smooth Quartet", mood: "Chill", duration: "4:01", audio: "https://assets.mixkit.co/music/preview/mixkit-feeling-happy-5.mp3" },
-  { id: "a4", title: "Lo-Fi Study", artist: "Beat Maker", mood: "Focus", duration: "3:12", audio: "https://assets.mixkit.co/music/preview/mixkit-getting-ready-46.mp3" },
-  { id: "a5", title: "Pop Anthem", artist: "Chart Toppers", mood: "Upbeat", duration: "2:41", audio: "https://assets.mixkit.co/music/preview/mixkit-hazy-after-hours-132.mp3" },
-  { id: "a6", title: "Dance Floor", artist: "Party Mix", mood: "Dance", duration: "3:18", audio: "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" },
-  { id: "a7", title: "Classical Morning", artist: "String Ensemble", mood: "Peaceful", duration: "4:22", audio: "https://assets.mixkit.co/music/preview/mixkit-life-is-a-dream-837.mp3" },
-  { id: "a8", title: "Rock Anthem", artist: "Electric Guitars", mood: "Energetic", duration: "3:19", audio: "https://assets.mixkit.co/music/preview/mixkit-sports-highlights-51.mp3" },
-  { id: "a9", title: "Electronic Pulse", artist: "Digital Artist", mood: "Dance", duration: "3:43", audio: "https://assets.mixkit.co/music/preview/mixkit-downtown-traffic-168.mp3" },
-  { id: "a10", title: "Ambient Waves", artist: "Sleep Sounds", mood: "Relaxing", duration: "3:21", audio: "https://assets.mixkit.co/music/preview/mixkit-games-worldbeat-466.mp3" },
+  { id: "a1", title: "Electric Dreams", artist: "Synth Wave", mood: "Energetic", duration: "3:50", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
+  { id: "a2", title: "Acoustic Sunset", artist: "Guitar Dreams", mood: "Relaxing", duration: "3:25", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+  { id: "a3", title: "Jazz Cafe", artist: "Smooth Quartet", mood: "Chill", duration: "4:01", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3" },
+  { id: "a4", title: "Lo-Fi Study", artist: "Beat Maker", mood: "Focus", duration: "3:12", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3" },
+  { id: "a5", title: "Pop Anthem", artist: "Chart Toppers", mood: "Upbeat", duration: "2:41", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3" },
+  { id: "a6", title: "Dance Floor", artist: "Party Mix", mood: "Dance", duration: "3:18", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3" },
+  { id: "a7", title: "Classical Morning", artist: "String Ensemble", mood: "Peaceful", duration: "4:22", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3" },
+  { id: "a8", title: "Rock Anthem", artist: "Electric Guitars", mood: "Energetic", duration: "3:19", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+  { id: "a9", title: "Electronic Pulse", artist: "Digital Artist", mood: "Dance", duration: "3:43", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+  { id: "a10", title: "Ambient Waves", artist: "Sleep Sounds", mood: "Relaxing", duration: "3:21", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
 ];
 
 const allSongs = [
@@ -131,6 +132,7 @@ const MusicPage = () => {
   const handleMetadataLoaded = () => {
     if (audioRef.current) {
       setSongDuration(audioRef.current.duration);
+      console.log("Audio metadata loaded successfully, duration:", audioRef.current.duration);
     }
   };
 
