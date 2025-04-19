@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useRef } from "react";
-import { fetchWeatherByCity } from "@/services/WeatherService";
+import { fetchWeatherByCity, fetchForecast } from "@/services/WeatherService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Cloud, CloudRain, Sun, MapPin, Wind, Droplets, Search, Send, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 const WeatherPage = () => {
   const [weather, setWeather] = useState({
@@ -21,6 +21,7 @@ const WeatherPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [forecast, setForecast] = useState<Array<{day: string, temp: number, condition: string}>>([]);
 
   // For weather assistant
   const [assistantQuery, setAssistantQuery] = useState("");
@@ -29,17 +30,6 @@ const WeatherPage = () => {
   ]);
   const [isAssistantThinking, setIsAssistantThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Mock forecast data - in a real app, this would come from an API
-  const [forecast, setForecast] = useState([
-    { day: "Today", temp: 24, condition: "clear" },
-    { day: "Tomorrow", temp: 26, condition: "clear" },
-    { day: "Wed", temp: 25, condition: "clouds" },
-    { day: "Thu", temp: 23, condition: "clouds" },
-    { day: "Fri", temp: 22, condition: "rain" },
-    { day: "Sat", temp: 24, condition: "clear" },
-    { day: "Sun", temp: 25, condition: "clear" }
-  ]);
 
   useEffect(() => {
     // Load Delhi weather by default for Indian cities focus
@@ -56,39 +46,21 @@ const WeatherPage = () => {
       setIsLoading(true);
       const weatherData = await fetchWeatherByCity("Delhi");
       setWeather(weatherData);
-      updateForecast(weatherData);
+      const forecastData = await fetchForecast("Delhi");
+      
+      // Convert API forecast to UI format
+      const formattedForecast = forecastData.map(item => ({
+        day: item.day,
+        temp: item.temp,
+        condition: item.condition
+      }));
+      
+      setForecast(formattedForecast);
     } catch (error) {
       toast.error("Could not fetch weather for Delhi. Please try a different city.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const updateForecast = (weatherData: any) => {
-    // In a real app, this would use an actual forecast API
-    // Here we're creating mock data based on current conditions
-    const currentTemp = weatherData.temperature;
-    const newForecast = [
-      { day: "Today", temp: currentTemp, condition: weatherData.condition },
-      { day: "Tomorrow", temp: currentTemp + Math.floor(Math.random() * 5) - 2, condition: weatherData.condition },
-    ];
-    
-    const conditions = ["clear", "clouds", "rain"];
-    
-    // Generate random but somewhat realistic forecast for remaining days
-    for (let i = 2; i < 7; i++) {
-      const lastTemp = newForecast[i-1].temp;
-      const tempChange = Math.floor(Math.random() * 5) - 2; // -2 to +2 degrees change
-      const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
-      
-      newForecast.push({
-        day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][(new Date().getDay() + i) % 7],
-        temp: lastTemp + tempChange,
-        condition: randomCondition
-      });
-    }
-    
-    setForecast(newForecast);
   };
 
   const handleSearch = async () => {
@@ -101,7 +73,18 @@ const WeatherPage = () => {
     try {
       const weatherData = await fetchWeatherByCity(searchQuery);
       setWeather(weatherData);
-      updateForecast(weatherData);
+      
+      // Get forecast data
+      const forecastData = await fetchForecast(searchQuery);
+      
+      // Convert API forecast to UI format
+      const formattedForecast = forecastData.map(item => ({
+        day: item.day,
+        temp: item.temp,
+        condition: item.condition
+      }));
+      
+      setForecast(formattedForecast);
       setSearchQuery("");
       setIsSearchOpen(false);
       toast.success(`Weather updated for ${weatherData.location}`);
@@ -127,14 +110,14 @@ const WeatherPage = () => {
     
     // Get weather-related response
     setTimeout(() => {
-      const response = getWeatherAssistantResponse(assistantQuery, weather);
+      const response = getWeatherAssistantResponse(assistantQuery, weather, forecast);
       setConversation(prev => [...prev, { role: "assistant", content: response }]);
       setIsAssistantThinking(false);
       setAssistantQuery("");
     }, 1000);
   };
 
-  const getWeatherAssistantResponse = (query: string, weatherData: any) => {
+  const getWeatherAssistantResponse = (query: string, weatherData: any, forecastData: any[]) => {
     const lowerQuery = query.toLowerCase();
     
     // Very basic pattern matching for demo purposes
@@ -143,7 +126,12 @@ const WeatherPage = () => {
       if (weatherData.condition === "rain" || weatherData.condition === "drizzle") {
         return "Yes, it's currently raining in " + weatherData.location + ". Don't forget your umbrella!";
       } else {
-        return "No rain expected today in " + weatherData.location + ". The current condition is " + weatherData.condition + ".";
+        const rainDays = forecastData.filter(day => day.condition === "rain" || day.condition === "drizzle");
+        if (rainDays.length > 0) {
+          return "No rain right now in " + weatherData.location + ", but rain is expected on " + rainDays.map(d => d.day).join(", ") + ".";
+        } else {
+          return "No rain expected today or in the next 6 days in " + weatherData.location + ". The current condition is " + weatherData.condition + ".";
+        }
       }
     } else if (lowerQuery.includes("hot") || lowerQuery.includes("temperature") || lowerQuery.includes("warm")) {
       if (weatherData.temperature > 30) {
@@ -170,8 +158,8 @@ const WeatherPage = () => {
         return "It's not very windy in " + weatherData.location + ". Wind speeds are only " + weatherData.windSpeed + " km/h.";
       }
     } else if (lowerQuery.includes("forecast") || lowerQuery.includes("next few days") || lowerQuery.includes("week")) {
-      let forecastSummary = "Here's the forecast for " + weatherData.location + ": ";
-      forecast.forEach(day => {
+      let forecastSummary = "Here's the 6-day forecast for " + weatherData.location + ": ";
+      forecastData.forEach(day => {
         forecastSummary += day.day + ": " + day.temp + "°C, " + day.condition + ". ";
       });
       return forecastSummary;
@@ -285,8 +273,8 @@ const WeatherPage = () => {
           </Card>
           
           <div className="mt-8">
-            <h2 className="text-xl font-medium mb-4">7-Day Forecast</h2>
-            <div className="grid grid-cols-7 gap-2">
+            <h2 className="text-xl font-medium mb-4">6-Day Forecast</h2>
+            <div className="grid grid-cols-6 gap-2">
               {forecast.map((day, index) => (
                 <div key={index} className="flex flex-col items-center p-3 bg-card rounded-lg">
                   <span className="text-sm font-medium">{day.day}</span>
