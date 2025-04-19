@@ -29,3 +29,15 @@ export const fetchWeatherByCity = async (city: string): Promise<WeatherData> => 
     throw error;
   }
 };
+
+// This would be implemented in a real app
+// export const fetchForecast = async (city: string): Promise<any[]> => {
+//   try {
+//     const response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${OPENWEATHER_API_KEY}&units=metric`);
+//     // Process forecast data...
+//     return processedData;
+//   } catch (error) {
+//     console.error('Forecast fetch error:', error);
+//     throw error;
+//   }
+// };

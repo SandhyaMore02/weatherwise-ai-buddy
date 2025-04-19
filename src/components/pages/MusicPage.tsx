@@ -11,31 +11,37 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Updated music recommendations with valid audio URLs
+// Updated music recommendations with working audio URLs
 const musicRecommendations = {
   sunny: [
-    { id: "s1", title: "Chaleya", artist: "Arijit Singh", mood: "Romantic", duration: "3:45", audio: "https://www2.pagalworld.tv/GpE34Kg9Mw8/113606/143748-chaleya-jawan-mp3-song-320kbps.mp3" },
-    { id: "s2", title: "Tum Hi Ho", artist: "Arijit Singh", mood: "Love", duration: "4:22", audio: "https://pwdown.info/113517/Tum%20Hi%20Ho%20-%20Aashiqui%202.mp3" },
-    { id: "s3", title: "Kesariya", artist: "Arijit Singh", mood: "Uplifting", duration: "4:28", audio: "https://paglasongs.com/files/download/id/2560" },
+    { id: "s1", title: "Chaleya", artist: "Arijit Singh", mood: "Romantic", duration: "3:45", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Jawan/Chaleya%20-%20Jawan%20128%20Kbps.mp3" },
+    { id: "s2", title: "Kesariya", artist: "Arijit Singh", mood: "Uplifting", duration: "4:28", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Brahmastra/Kesariya%20-%20Brahmastra%20128%20Kbps.mp3" },
+    { id: "s3", title: "Jhoome Jo Pathaan", artist: "Arijit Singh", mood: "Dance", duration: "3:22", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Pathaan/Jhoome%20Jo%20Pathaan%20-%20Pathaan%20128%20Kbps.mp3" },
   ],
   cloudy: [
-    { id: "c1", title: "Tu Hai Ki Nahi", artist: "Ankit Tiwari", mood: "Melancholic", duration: "5:10", audio: "https://paglasongs.com/files/download/id/3237" },
-    { id: "c2", title: "Tum Mile", artist: "Pritam", mood: "Romantic", duration: "4:25", audio: "https://paglasongs.com/files/download/id/1572" },
-    { id: "c3", title: "Phir Le Aya Dil", artist: "Arijit Singh", mood: "Soulful", duration: "4:45", audio: "https://paglasongs.com/files/download/id/1638" },
+    { id: "c1", title: "Tum Hi Ho", artist: "Arijit Singh", mood: "Romantic", duration: "4:22", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Aashiqui%202/Tum%20Hi%20Ho%20-%20Aashiqui%202%20128%20Kbps.mp3" },
+    { id: "c2", title: "Phir Le Aya Dil", artist: "Arijit Singh", mood: "Soulful", duration: "4:45", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Barfi/Phir%20Le%20Aya%20Dil%20-%20Barfi%20128%20Kbps.mp3" },
+    { id: "c3", title: "Manike", artist: "Yohani", mood: "Dance", duration: "3:30", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Thank%20God/Manike%20-%20Thank%20God%20128%20Kbps.mp3" },
   ],
   rainy: [
-    { id: "r1", title: "Barish Ban Jana", artist: "Stebin Ben", mood: "Romantic", duration: "3:48", audio: "https://paglasongs.com/files/download/id/10280" },
-    { id: "r2", title: "Baarish", artist: "Ash King", mood: "Romantic", duration: "4:15", audio: "https://paglasongs.com/files/download/id/1493" },
-    { id: "r3", title: "Rim Jhim", artist: "Jubin Nautiyal", mood: "Peaceful", duration: "4:10", audio: "https://paglasongs.com/files/download/id/5474" },
+    { id: "r1", title: "Baarish Ban Jana", artist: "Stebin Ben", mood: "Romantic", duration: "3:48", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Baarish%20Ban%20Jaana/Baarish%20Ban%20Jaana%20-%20Baarish%20Ban%20Jaana%20128%20Kbps.mp3" },
+    { id: "r2", title: "Baarish", artist: "Ash King", mood: "Romantic", duration: "4:15", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Half%20Girlfriend/Baarish%20-%20Half%20Girlfriend%20128%20Kbps.mp3" },
+    { id: "r3", title: "Rim Jhim", artist: "Jubin Nautiyal", mood: "Peaceful", duration: "4:10", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Rim%20Jhim/Rim%20Jhim%20-%20Rim%20Jhim%20128%20Kbps.mp3" },
   ],
 };
 
+// More Indian songs from various genres
 const additionalSongs = [
-  { id: "i1", title: "Raataan Lambiyan", artist: "Jubin Nautiyal", mood: "Romantic", duration: "3:50", audio: "https://paglasongs.com/files/download/id/10201" },
-  { id: "i2", title: "Mehrma", artist: "Darshan Raval", mood: "Soulful", duration: "4:12", audio: "https://paglasongs.com/files/download/id/17673" },
-  { id: "i3", title: "Nainowale Ne", artist: "Neeti Mohan", mood: "Classical", duration: "4:30", audio: "https://paglasongs.com/files/download/id/2264" },
-  { id: "i4", title: "Manike", artist: "Yohani", mood: "Dance", duration: "3:30", audio: "https://paglasongs.com/files/download/id/13036" },
-  { id: "i5", title: "Pasoori", artist: "Ali Sethi", mood: "Fusion", duration: "3:44", audio: "https://paglasongs.com/files/download/id/12853" },
+  { id: "i1", title: "Raataan Lambiyan", artist: "Jubin Nautiyal", mood: "Romantic", duration: "3:50", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Shershaah/Raataan%20Lambiyan%20-%20Shershaah%20128%20Kbps.mp3" },
+  { id: "i2", title: "Tere Vaaste", artist: "Arijit Singh", mood: "Romantic", duration: "3:25", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Zara%20Hatke%20Zara%20Bachke/Tere%20Vaaste%20-%20Zara%20Hatke%20Zara%20Bachke%20128%20Kbps.mp3" },
+  { id: "i3", title: "O Bedardeya", artist: "Arijit Singh", mood: "Sad", duration: "4:01", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Tu%20Jhoothi%20Main%20Makkaar/O%20Bedardeya%20-%20Tu%20Jhoothi%20Main%20Makkaar%20128%20Kbps.mp3" },
+  { id: "i4", title: "Pasoori Nu", artist: "Arijit Singh", mood: "Fusion", duration: "3:12", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Satyaprem%20Ki%20Katha/Pasoori%20Nu%20-%20Satyaprem%20Ki%20Katha%20128%20Kbps.mp3" },
+  { id: "i5", title: "Heeriye", artist: "Arijit Singh", mood: "Upbeat", duration: "2:41", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Heeriye/Heeriye%20-%20Heeriye%20128%20Kbps.mp3" },
+  { id: "i6", title: "Kaavaalaa", artist: "Shilpa Rao", mood: "Dance", duration: "3:18", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Jailer/Kaavaalaa%20-%20Jailer%20128%20Kbps.mp3" },
+  { id: "i7", title: "Apna Bana Le", artist: "Arijit Singh", mood: "Romantic", duration: "4:22", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Bhediya/Apna%20Bana%20Le%20-%20Bhediya%20128%20Kbps.mp3" },
+  { id: "i8", title: "What Jhumka", artist: "Arijit Singh", mood: "Dance", duration: "3:19", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Rocky%20Aur%20Rani%20Kii%20Prem%20Kahaani/What%20Jhumka%20-%20Rocky%20Aur%20Rani%20Kii%20Prem%20Kahaani%20128%20Kbps.mp3" },
+  { id: "i9", title: "Chammak Challo", artist: "Akon", mood: "Dance", duration: "3:43", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Ra.One/Chammak%20Challo%20-%20Ra.One%20128%20Kbps.mp3" },
+  { id: "i10", title: "Chaleya", artist: "Arijit Singh", mood: "Romantic", duration: "3:21", audio: "https://pagalsong.in/uploads/systemuploads/mp3/Jawan/Chaleya%20-%20Jawan%20128%20Kbps.mp3" },
 ];
 
 const allSongs = [
@@ -68,6 +74,8 @@ const MusicPage = () => {
       audioRef.current.addEventListener('loadedmetadata', handleMetadataLoaded);
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       audioRef.current.addEventListener('ended', handleSongEnd);
+      audioRef.current.addEventListener('error', handleAudioError);
+      audioRef.current.volume = volume[0] / 100;
     }
     
     return () => {
@@ -75,6 +83,7 @@ const MusicPage = () => {
         audioRef.current.removeEventListener('loadedmetadata', handleMetadataLoaded);
         audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
         audioRef.current.removeEventListener('ended', handleSongEnd);
+        audioRef.current.removeEventListener('error', handleAudioError);
         audioRef.current.pause();
         audioRef.current.src = "";
       }
@@ -105,8 +114,11 @@ const MusicPage = () => {
 
   useEffect(() => {
     // When current song changes, load the new audio
-    if (isPlaying && audioRef.current) {
-      loadAndPlayAudio();
+    if (playlistSongs.length > 0 && audioRef.current) {
+      loadAudio();
+      if (isPlaying) {
+        playAudio();
+      }
     }
   }, [currentSong]);
 
@@ -132,12 +144,23 @@ const MusicPage = () => {
     nextSong();
   };
 
-  const loadAndPlayAudio = () => {
+  const handleAudioError = (e: any) => {
+    console.error("Audio error:", e);
+    toast.error("Could not play this song. Trying next song...");
+    nextSong();
+  };
+
+  const loadAudio = () => {
     if (!audioRef.current || !playlistSongs[currentSong]) return;
     
     const audioSrc = playlistSongs[currentSong].audio;
     audioRef.current.src = audioSrc;
     audioRef.current.load();
+  };
+
+  const playAudio = () => {
+    if (!audioRef.current) return;
+    
     audioRef.current.play()
       .then(() => {
         setIsPlaying(true);
@@ -145,8 +168,9 @@ const MusicPage = () => {
       })
       .catch((error) => {
         console.error("Audio playback failed:", error);
-        toast.error("Could not play audio. Please try again.");
+        toast.error("Could not play audio. Trying another song...");
         setIsPlaying(false);
+        nextSong();
       });
   };
 
@@ -158,7 +182,7 @@ const MusicPage = () => {
       setIsPlaying(false);
       toast.info("Music paused");
     } else {
-      loadAndPlayAudio();
+      playAudio();
     }
   };
 
@@ -193,6 +217,12 @@ const MusicPage = () => {
     setIsPlaying(false);
     setProgress([0]);
     toast.success(`Found ${filteredResults.length} songs matching "${searchQuery}"`);
+    
+    // Reset the audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
 
   const resetSearch = () => {
@@ -201,6 +231,12 @@ const MusicPage = () => {
     setCurrentSong(0);
     setIsPlaying(false);
     setProgress([0]);
+    
+    // Reset the audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
 
   const changeCondition = (condition: string) => {
@@ -227,7 +263,7 @@ const MusicPage = () => {
       <h1 className="text-2xl font-bold flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Music className="h-6 w-6 text-primary" />
-          <span>Music</span>
+          <span>Indian Music</span>
         </div>
         <Button 
           variant="ghost" 
@@ -241,7 +277,7 @@ const MusicPage = () => {
       {isSearching && (
         <div className="flex gap-2 items-center mb-4">
           <Input
-            placeholder="Search by song title, artist, or mood..."
+            placeholder="Search Bollywood songs by title, artist, or mood..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -262,7 +298,7 @@ const MusicPage = () => {
           </h2>
           {playlistSongs === songs && (
             <p className="text-muted-foreground mb-6">
-              Here's some {playlistSongs[0]?.mood?.toLowerCase() || ''} music that matches today's {currentCondition} weather.
+              Here's some {playlistSongs[0]?.mood?.toLowerCase() || ''} Bollywood music that matches today's {currentCondition} weather.
             </p>
           )}
           
@@ -275,7 +311,7 @@ const MusicPage = () => {
               <p className="text-muted-foreground">{playlistSongs[currentSong]?.artist || ""}</p>
               <div className="flex items-center justify-center gap-2 mt-2 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                <span>{formatTime(currentTime)} / {playlistSongs[currentSong]?.duration || "0:00"}</span>
+                <span>{formatTime(currentTime)} / {formatTime(songDuration)}</span>
               </div>
             </div>
             
@@ -327,7 +363,7 @@ const MusicPage = () => {
           <h2 className="text-xl font-medium">
             {playlistSongs === songs ? 
               `Playlist for ${currentCondition} days` : 
-              "Playlist"}
+              "Search Results"}
           </h2>
           
           <div className="flex gap-2">

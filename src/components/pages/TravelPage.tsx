@@ -1,6 +1,11 @@
 
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Compass, Umbrella, Bus, Bike, AlertTriangle } from "lucide-react";
+import { Compass, Umbrella, Bus, Bike, AlertTriangle, Search, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { fetchWeatherByCity } from "@/services/WeatherService";
 
 // Mock data for travel tips
 const travelTips = {
@@ -27,18 +32,144 @@ const travelTips = {
   }
 };
 
-// For demo purposes, we'll use sunny as the current condition
-const currentCondition = "sunny";
+// City-specific recommendations
+const cityRecommendations = {
+  "delhi": [
+    { icon: "🏰", name: "Red Fort", description: "Historic monument in Old Delhi" },
+    { icon: "🕌", name: "Jama Masjid", description: "One of India's largest mosques" },
+    { icon: "🏛️", name: "India Gate", description: "War memorial in central Delhi" }
+  ],
+  "mumbai": [
+    { icon: "🏨", name: "Gateway of India", description: "Iconic monument facing Arabian Sea" },
+    { icon: "🚶", name: "Marine Drive", description: "Scenic coastal boulevard" },
+    { icon: "🚆", name: "CST Railway Station", description: "UNESCO World Heritage Site" }
+  ],
+  "bangalore": [
+    { icon: "🏯", name: "Bangalore Palace", description: "Tudor-style architecture palace" },
+    { icon: "🌳", name: "Cubbon Park", description: "Large green space in the city center" },
+    { icon: "🛍️", name: "MG Road", description: "Popular shopping and entertainment area" }
+  ],
+  "kolkata": [
+    { icon: "🌉", name: "Howrah Bridge", description: "Iconic cantilever bridge" },
+    { icon: "🏛️", name: "Victoria Memorial", description: "Marble museum dedicated to Queen Victoria" },
+    { icon: "🚋", name: "Tram Ride", description: "Experience the historic tram network" }
+  ],
+  "chennai": [
+    { icon: "🏖️", name: "Marina Beach", description: "One of the longest urban beaches in the world" },
+    { icon: "🕍", name: "Kapaleeshwarar Temple", description: "Ancient Shiva temple" },
+    { icon: "🏛️", name: "Fort St. George", description: "First English fortress in India" }
+  ],
+  "jaipur": [
+    { icon: "🏰", name: "Amber Fort", description: "Majestic fort overlooking Maota Lake" },
+    { icon: "👑", name: "City Palace", description: "Royal residence in the heart of Jaipur" },
+    { icon: "📸", name: "Hawa Mahal", description: "Palace of Winds with intricate facade" }
+  ],
+  "hyderabad": [
+    { icon: "🏛️", name: "Charminar", description: "Iconic monument and mosque" },
+    { icon: "🏰", name: "Golconda Fort", description: "Ancient fort with light and sound show" },
+    { icon: "🍲", name: "Biryani Tour", description: "Sample the famous Hyderabadi biryani" }
+  ],
+  "agra": [
+    { icon: "🏛️", name: "Taj Mahal", description: "World-famous marble mausoleum" },
+    { icon: "🏰", name: "Agra Fort", description: "UNESCO World Heritage Site" },
+    { icon: "🏙️", name: "Fatehpur Sikri", description: "Historic city founded by Akbar" }
+  ]
+};
+
+// Default recommendations for cities not in our database
+const defaultRecommendations = [
+  { icon: "🏞️", name: "Local Parks", description: "Explore the green spaces" },
+  { icon: "🏛️", name: "Museums & Galleries", description: "Discover local culture and history" },
+  { icon: "🍽️", name: "Local Cuisine", description: "Try regional specialties" }
+];
 
 const TravelPage = () => {
+  const [currentCondition, setCurrentCondition] = useState("sunny");
+  const [currentCity, setCurrentCity] = useState("delhi");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const tips = travelTips[currentCondition as keyof typeof travelTips];
+  const recommendations = cityRecommendations[currentCity.toLowerCase() as keyof typeof cityRecommendations] || defaultRecommendations;
+  
+  useEffect(() => {
+    // Load Delhi weather by default
+    fetchCityWeather("Delhi");
+  }, []);
+
+  const fetchCityWeather = async (city: string) => {
+    if (!city) return;
+    
+    setIsLoading(true);
+    try {
+      const weatherData = await fetchWeatherByCity(city);
+      setCurrentCity(weatherData.location.toLowerCase());
+      
+      // Set weather condition
+      if (weatherData.condition === "clear") {
+        setCurrentCondition("sunny");
+      } else if (weatherData.condition === "clouds") {
+        setCurrentCondition("cloudy");
+      } else if (weatherData.condition === "rain" || weatherData.condition === "drizzle") {
+        setCurrentCondition("rainy");
+      }
+      
+      toast.success(`Travel tips updated for ${weatherData.location}`);
+    } catch (error) {
+      console.error("Error fetching weather:", error);
+      toast.error("Couldn't fetch travel information for this city");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim() === "") {
+      toast.error("Please enter a city name");
+      return;
+    }
+    
+    fetchCityWeather(searchQuery);
+    setSearchQuery("");
+    setIsSearchOpen(false);
+  };
   
   return (
     <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
-        <Compass className="h-6 w-6 text-primary" />
-        Travel Tips
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Compass className="h-6 w-6 text-primary" />
+          Travel Tips
+        </h1>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => setIsSearchOpen(!isSearchOpen)}
+        >
+          <Search className="h-5 w-5" />
+        </Button>
+      </div>
+      
+      {isSearchOpen && (
+        <div className="flex gap-2 items-center">
+          <Input
+            placeholder="Enter city name (e.g., Mumbai, Delhi, Bangalore)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button onClick={handleSearch} disabled={isLoading}>
+            {isLoading ? "Searching..." : "Search"}
+          </Button>
+        </div>
+      )}
+      
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <MapPin className="h-4 w-4" />
+        <span className="capitalize">{currentCity}</span>
+        {isLoading && <span className="text-xs">(Loading...)</span>}
+      </div>
       
       <Card className="weather-card bg-gradient-to-br from-primary/20 to-primary/5">
         <CardContent className="p-6">
@@ -85,20 +216,17 @@ const TravelPage = () => {
       
       <Card className="mt-6">
         <CardContent className="p-6">
-          <h2 className="text-xl font-medium mb-4">Local Recommendations</h2>
+          <h2 className="text-xl font-medium mb-4">Local Recommendations for {currentCity.charAt(0).toUpperCase() + currentCity.slice(1)}</h2>
           <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-secondary flex items-center gap-3">
-              <span className="text-2xl">🏞️</span>
-              <p>Golden Gate Park - Perfect for a sunny day!</p>
-            </div>
-            <div className="p-3 rounded-lg bg-secondary flex items-center gap-3">
-              <span className="text-2xl">🏙️</span>
-              <p>Ferry Building - Great views and food market</p>
-            </div>
-            <div className="p-3 rounded-lg bg-secondary flex items-center gap-3">
-              <span className="text-2xl">🌉</span>
-              <p>Walk across the Golden Gate Bridge</p>
-            </div>
+            {recommendations.map((item, index) => (
+              <div key={index} className="p-3 rounded-lg bg-secondary flex items-center gap-3">
+                <span className="text-2xl">{item.icon}</span>
+                <div>
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
