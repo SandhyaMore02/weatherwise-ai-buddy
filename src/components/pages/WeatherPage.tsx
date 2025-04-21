@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { fetchWeatherByCity, fetchForecast } from "@/services/WeatherService";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,60 +87,69 @@ const WeatherPage = () => {
   const getWeatherAssistantResponse = (query: string, weatherData: any, forecastData: any[]) => {
     const lowerQuery = query.toLowerCase();
     
-    if (lowerQuery.includes("rain") || lowerQuery.includes("umbrella")) {
-      if (weatherData.condition === "rain" || weatherData.condition === "drizzle") {
-        return "Yes, it's currently raining in " + weatherData.location + ". Don't forget your umbrella!";
-      } else {
-        const rainDays = forecastData.filter(day => day.condition === "rain" || day.condition === "drizzle");
-        if (rainDays.length > 0) {
-          return "No rain right now in " + weatherData.location + ", but rain is expected on " + rainDays.map(d => d.day).join(", ") + ".";
-        } else {
-          return "No rain expected today or in the next 6 days in " + weatherData.location + ". The current condition is " + weatherData.condition + ".";
-        }
+    if (lowerQuery.includes("where") || lowerQuery.includes("location")) {
+      return `I'm currently providing weather information for ${weatherData.location}. Would you like to know more about the current conditions?`;
+    }
+
+    const weatherKeywords = [
+      "temperature", "temp", "hot", "cold", "warm", "cool", 
+      "rain", "sunny", "cloudy", "humidity", "wind", "weather"
+    ];
+
+    const matchedKeywords = weatherKeywords.filter(keyword => lowerQuery.includes(keyword));
+    
+    if (matchedKeywords.length > 0) {
+      switch (true) {
+        case lowerQuery.includes("temperature") || lowerQuery.includes("temp") || lowerQuery.includes("hot") || lowerQuery.includes("cold"):
+          return `The current temperature in ${weatherData.location} is ${weatherData.temperature}°C. It feels like ${weatherData.feelsLike}°C.`;
+        
+        case lowerQuery.includes("rain"):
+          if (weatherData.condition === "rain" || weatherData.condition === "drizzle") {
+            return `Yes, it's currently raining in ${weatherData.location}. Bring an umbrella!`;
+          } else {
+            const rainDays = forecastData.filter(day => day.condition === "rain" || day.condition === "drizzle");
+            return rainDays.length > 0 
+              ? `No rain right now, but rain is expected in the next few days.`
+              : `No rain expected in the forecast for ${weatherData.location}.`;
+          }
+        
+        case lowerQuery.includes("humidity"):
+          return `The humidity in ${weatherData.location} is currently ${weatherData.humidity}%. ${
+            weatherData.humidity > 80 ? "It might feel quite sticky outside." : 
+            weatherData.humidity > 50 ? "The humidity is moderate." : 
+            "The air is quite dry."
+          }`;
+        
+        case lowerQuery.includes("wind"):
+          return `Wind speed in ${weatherData.location} is ${weatherData.windSpeed} km/h. ${
+            weatherData.windSpeed > 20 ? "It's quite windy today!" : 
+            weatherData.windSpeed > 10 ? "There's a moderate breeze." : 
+            "The wind is calm."
+          }`;
       }
-    } else if (lowerQuery.includes("hot") || lowerQuery.includes("temperature") || lowerQuery.includes("warm")) {
-      if (weatherData.temperature > 30) {
-        return "Yes, it's quite hot in " + weatherData.location + " at " + weatherData.temperature + "°C. Stay hydrated and try to stay in shade.";
-      } else if (weatherData.temperature > 20) {
-        return "The temperature in " + weatherData.location + " is pleasant at " + weatherData.temperature + "°C.";
-      } else {
-        return "It's not very warm in " + weatherData.location + ". The current temperature is " + weatherData.temperature + "°C.";
-      }
-    } else if (lowerQuery.includes("humid") || lowerQuery.includes("humidity")) {
-      if (weatherData.humidity > 80) {
-        return "Yes, it's very humid in " + weatherData.location + " with humidity at " + weatherData.humidity + "%. It might feel sticky outside.";
-      } else if (weatherData.humidity > 50) {
-        return "The humidity in " + weatherData.location + " is moderate at " + weatherData.humidity + "%.";
-      } else {
-        return "The air is quite dry in " + weatherData.location + " with humidity at only " + weatherData.humidity + "%.";
-      }
-    } else if (lowerQuery.includes("wind") || lowerQuery.includes("windy")) {
-      if (weatherData.windSpeed > 20) {
-        return "Yes, it's very windy in " + weatherData.location + " with wind speeds of " + weatherData.windSpeed + " km/h. Be careful outside!";
-      } else if (weatherData.windSpeed > 10) {
-        return "There's a moderate breeze in " + weatherData.location + " with wind speeds of " + weatherData.windSpeed + " km/h.";
-      } else {
-        return "It's not very windy in " + weatherData.location + ". Wind speeds are only " + weatherData.windSpeed + " km/h.";
-      }
-    } else if (lowerQuery.includes("forecast") || lowerQuery.includes("next few days") || lowerQuery.includes("week")) {
-      let forecastSummary = "Here's the 6-day forecast for " + weatherData.location + ": ";
+    }
+
+    if (lowerQuery.includes("forecast") || lowerQuery.includes("next few days") || lowerQuery.includes("week")) {
+      let forecastSummary = `6-day forecast for ${weatherData.location}: `;
       forecastData.forEach(day => {
-        forecastSummary += day.day + ": " + day.temp + "°C, " + day.condition + ". ";
+        forecastSummary += `${day.day}: ${day.temp}°C, ${day.condition}. `;
       });
       return forecastSummary;
-    } else if (lowerQuery.includes("wear") || lowerQuery.includes("clothes") || lowerQuery.includes("outfit")) {
-      if (weatherData.temperature > 30) {
-        return "For today's weather in " + weatherData.location + " ("+weatherData.temperature+"°C, "+weatherData.condition+"), wear light, breathable clothing like cotton t-shirts and shorts. Don't forget sunglasses, a hat, and sunscreen.";
-      } else if (weatherData.temperature > 20) {
-        return "For today's weather in " + weatherData.location + " ("+weatherData.temperature+"°C, "+weatherData.condition+"), light clothing like t-shirts and jeans would be comfortable. Maybe bring a light jacket for the evening.";
-      } else if (weatherData.temperature > 10) {
-        return "For today's weather in " + weatherData.location + " ("+weatherData.temperature+"°C, "+weatherData.condition+"), you'll need a jacket or light sweater. Jeans and closed shoes would be appropriate.";
-      } else {
-        return "For today's weather in " + weatherData.location + " ("+weatherData.temperature+"°C, "+weatherData.condition+"), dress warmly with layers, a coat, and don't forget gloves and a hat.";
-      }
-    } else {
-      return "I'm your weather assistant for " + weatherData.location + ". Current conditions: " + weatherData.temperature + "°C, " + weatherData.condition + ". How can I help you with weather-related questions?";
     }
+
+    if (lowerQuery.includes("wear") || lowerQuery.includes("clothes") || lowerQuery.includes("outfit")) {
+      if (weatherData.temperature > 30) {
+        return `For today's hot weather in ${weatherData.location} (${weatherData.temperature}°C), wear light, breathable clothing like cotton t-shirts and shorts. Don't forget sunglasses, a hat, and sunscreen.`;
+      } else if (weatherData.temperature > 20) {
+        return `For the warm weather in ${weatherData.location} (${weatherData.temperature}°C), light clothing like t-shirts and jeans would be comfortable. Maybe bring a light jacket for the evening.`;
+      } else if (weatherData.temperature > 10) {
+        return `For the mild weather in ${weatherData.location} (${weatherData.temperature}°C), you'll need a jacket or light sweater. Jeans and closed shoes would be appropriate.`;
+      } else {
+        return `It's quite cold in ${weatherData.location} (${weatherData.temperature}°C). Dress warmly with layers, a coat, and don't forget gloves and a hat.`;
+      }
+    }
+
+    return `I'm your weather assistant for ${weatherData.location}. Current conditions are ${weatherData.temperature}°C and ${weatherData.condition}. Ask me anything about the weather!`;
   };
 
   const getWeatherIcon = (condition: string) => {
