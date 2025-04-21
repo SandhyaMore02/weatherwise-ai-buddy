@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { fetchWeatherByCity, fetchForecast } from "@/services/WeatherService";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import { useCity } from "@/contexts/CityContext";
 const WeatherPage = () => {
   const { city, setCity } = useCity();
   const [weather, setWeather] = useState({
-    location: "Maharashtra",
+    location: city,
     temperature: 24,
     condition: "sunny",
     humidity: 65,
@@ -25,7 +26,7 @@ const WeatherPage = () => {
   const [forecast, setForecast] = useState<Array<{day: string, temp: number, condition: string}>>([]);
   const [assistantQuery, setAssistantQuery] = useState("");
   const [conversation, setConversation] = useState<{ role: string; content: string }[]>([
-    { role: "assistant", content: "Hi! I'm your weather assistant. Ask me anything about weather, climate, or how to prepare for different conditions." }
+    { role: "assistant", content: `Hi! I'm your weather assistant for ${city}. Ask me anything about weather, climate, or how to prepare for different conditions.` }
   ]);
   const [isAssistantThinking, setIsAssistantThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -51,6 +52,11 @@ const WeatherPage = () => {
         temp: item.temp,
         condition: item.condition
       })));
+      
+      // Update assistant conversation with new city
+      setConversation([
+        { role: "assistant", content: `Hi! I'm your weather assistant for ${weatherData.location}. Ask me anything about weather, climate, or how to prepare for different conditions.` }
+      ]);
     } catch (error) {
       toast.error("Could not fetch weather. Please try another city.");
     } finally {
@@ -87,8 +93,28 @@ const WeatherPage = () => {
   const getWeatherAssistantResponse = (query: string, weatherData: any, forecastData: any[]) => {
     const lowerQuery = query.toLowerCase();
     
-    if (lowerQuery.includes("where") || lowerQuery.includes("location")) {
-      return `I'm currently providing weather information for ${weatherData.location}. Would you like to know more about the current conditions?`;
+    // Handle city-related queries
+    if (lowerQuery.includes("city") || 
+        lowerQuery.includes("location") || 
+        lowerQuery.includes("where") || 
+        lowerQuery.includes("place")) {
+      return `I'm currently providing weather information for ${weatherData.location}. If you'd like information for a different city, you can use the search function at the top of the screen.`;
+    }
+    
+    // Handle change city requests
+    if ((lowerQuery.includes("change") || lowerQuery.includes("switch") || lowerQuery.includes("different")) && 
+        (lowerQuery.includes("city") || lowerQuery.includes("location") || lowerQuery.includes("place"))) {
+      return `To view weather for a different city, please use the search icon at the top of the screen.`;
+    }
+    
+    // Handle specific cities mentioned in query
+    const cityRegex = /(?:in|for|at)\s+([a-zA-Z\s]+)(?:\?|$|\.)/i;
+    const cityMatch = lowerQuery.match(cityRegex);
+    if (cityMatch && cityMatch[1] && cityMatch[1].length > 2) {
+      const mentionedCity = cityMatch[1].trim();
+      if (mentionedCity.toLowerCase() !== weatherData.location.toLowerCase()) {
+        return `I'm currently showing weather for ${weatherData.location}. If you'd like to see weather information for ${mentionedCity}, please use the search icon at the top of the screen.`;
+      }
     }
 
     const weatherKeywords = [
@@ -109,7 +135,7 @@ const WeatherPage = () => {
           } else {
             const rainDays = forecastData.filter(day => day.condition === "rain" || day.condition === "drizzle");
             return rainDays.length > 0 
-              ? `No rain right now, but rain is expected in the next few days.`
+              ? `No rain right now in ${weatherData.location}, but rain is expected in the next few days.`
               : `No rain expected in the forecast for ${weatherData.location}.`;
           }
         
@@ -149,6 +175,17 @@ const WeatherPage = () => {
       }
     }
 
+    // General inquiries about the weather condition
+    if (lowerQuery.includes("how") && lowerQuery.includes("weather")) {
+      return `The current weather in ${weatherData.location} is ${weatherData.condition} with a temperature of ${weatherData.temperature}°C. It feels like ${weatherData.feelsLike}°C with ${weatherData.humidity}% humidity and wind speed of ${weatherData.windSpeed} km/h.`;
+    }
+
+    // Handle greetings
+    if (lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey")) {
+      return `Hello! I'm your weather assistant for ${weatherData.location}. The current weather is ${weatherData.condition} at ${weatherData.temperature}°C. How can I help you today?`;
+    }
+
+    // Default response
     return `I'm your weather assistant for ${weatherData.location}. Current conditions are ${weatherData.temperature}°C and ${weatherData.condition}. Ask me anything about the weather!`;
   };
 
@@ -283,8 +320,8 @@ const WeatherPage = () => {
                           : 'bg-primary text-primary-foreground ml-auto'
                       }`}
                       style={{ 
-                        maxWidth: 'fit-content',
-                        marginLeft: message.role === 'user' ? 'auto' : 'inherit'
+                        maxWidth: '85%',
+                        marginLeft: message.role === 'user' ? 'auto' : '0'
                       }}
                     >
                       {message.content}
@@ -307,7 +344,7 @@ const WeatherPage = () => {
               
               <div className="flex gap-2">
                 <Textarea 
-                  placeholder="Ask me about today's weather, what to wear, forecast, etc."
+                  placeholder="Ask me about weather in any city, forecasts, what to wear, etc."
                   value={assistantQuery}
                   onChange={(e) => setAssistantQuery(e.target.value)}
                   onKeyDown={(e) => {

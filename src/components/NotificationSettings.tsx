@@ -94,25 +94,39 @@ const NotificationSettings = () => {
     
     // Check permissions if notifications are enabled
     if (notificationsEnabled && "Notification" in window) {
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          const message = `Notifications will be sent at ${notificationTime}`;
-          toast.success(message);
-          
-          // Show a test notification
-          new Notification("WeatherWise Notifications Enabled", {
-            body: `You'll receive daily updates at ${notificationTime}`
-          });
-        } else {
-          toast.warning("Please enable browser notifications for the best experience");
-        }
-      });
+      if (Notification.permission === "granted") {
+        showNotification();
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            showNotification();
+          } else {
+            toast.warning("Please enable browser notifications for the best experience");
+          }
+        });
+      } else {
+        toast.warning("Notifications are blocked. Please update your browser settings.");
+      }
+    } else if (notificationsEnabled) {
+      toast.warning("Browser notifications are not supported in this browser");
     } else {
-      const message = notificationsEnabled
-        ? `Notifications will be sent at ${notificationTime}`
-        : "Notifications have been disabled";
-      
-      toast.success(message);
+      toast.success("Notification settings saved successfully");
+    }
+  };
+
+  const showNotification = () => {
+    const message = `Notifications will be sent at ${notificationTime}`;
+    toast.success(message);
+    
+    // Show a test notification
+    try {
+      new Notification("WeatherWise Notifications Enabled", {
+        body: `You'll receive daily updates at ${notificationTime}`,
+        icon: "/favicon.ico"
+      });
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      toast.error("Could not create notification");
     }
   };
 
