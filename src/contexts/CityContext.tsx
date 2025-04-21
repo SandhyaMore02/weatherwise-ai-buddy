@@ -9,8 +9,8 @@ type CityContextType = {
 const CityContext = createContext<CityContextType | undefined>(undefined);
 
 export const CityProvider = ({ children }: { children: ReactNode }) => {
-  // Default city: Delhi
-  const [city, setCity] = useState("Delhi");
+  // Default city: Maharashtra
+  const [city, setCity] = useState("Maharashtra");
   return (
     <CityContext.Provider value={{ city, setCity }}>
       {children}

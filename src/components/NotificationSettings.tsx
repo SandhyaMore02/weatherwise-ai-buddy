@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -51,6 +51,8 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange }) => {
   );
 };
 
+const STORAGE_KEY = "weatherwise-notification-settings";
+
 const NotificationSettings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTime, setNotificationTime] = useState("08:00");
@@ -59,13 +61,59 @@ const NotificationSettings = () => {
   const [travelTips, setTravelTips] = useState(true);
   const [musicRecommendations, setMusicRecommendations] = useState(true);
 
+  // Load saved settings on component mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem(STORAGE_KEY);
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setNotificationsEnabled(parsedSettings.enabled || false);
+        setNotificationTime(parsedSettings.time || "08:00");
+        setWeatherUpdates(parsedSettings.weatherUpdates !== false);
+        setOutfitSuggestions(parsedSettings.outfitSuggestions !== false);
+        setTravelTips(parsedSettings.travelTips !== false);
+        setMusicRecommendations(parsedSettings.musicRecommendations !== false);
+      } catch (error) {
+        console.error("Error loading notification settings:", error);
+      }
+    }
+  }, []);
+
   const handleSaveSettings = () => {
-    // In a real app, this would save to local storage or a backend
-    const message = notificationsEnabled
-      ? `Notifications will be sent at ${notificationTime}`
-      : "Notifications have been disabled";
+    // Save notification settings to local storage
+    const settings = {
+      enabled: notificationsEnabled,
+      time: notificationTime,
+      weatherUpdates,
+      outfitSuggestions,
+      travelTips,
+      musicRecommendations
+    };
     
-    toast.success(message);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    
+    // Check permissions if notifications are enabled
+    if (notificationsEnabled && "Notification" in window) {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          const message = `Notifications will be sent at ${notificationTime}`;
+          toast.success(message);
+          
+          // Show a test notification
+          new Notification("WeatherWise Notifications Enabled", {
+            body: `You'll receive daily updates at ${notificationTime}`
+          });
+        } else {
+          toast.warning("Please enable browser notifications for the best experience");
+        }
+      });
+    } else {
+      const message = notificationsEnabled
+        ? `Notifications will be sent at ${notificationTime}`
+        : "Notifications have been disabled";
+      
+      toast.success(message);
+    }
   };
 
   return (

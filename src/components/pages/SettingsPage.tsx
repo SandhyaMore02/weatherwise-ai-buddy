@@ -3,8 +3,11 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NotificationSettings from "@/components/NotificationSettings";
 import { Settings, User, Globe, Info } from "lucide-react";
+import { useCity } from "@/contexts/CityContext";
 
 const SettingsPage = () => {
+  const { city } = useCity();
+
   return (
     <div className="p-4 space-y-6">
       <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -51,7 +54,7 @@ const SettingsPage = () => {
           <p className="text-muted-foreground mb-4">Your saved location will be used when the app starts.</p>
           <div className="flex items-center justify-between">
             <span>Current Default</span>
-            <span className="font-medium">San Francisco</span>
+            <span className="font-medium">{city}</span>
           </div>
         </CardContent>
       </Card>
