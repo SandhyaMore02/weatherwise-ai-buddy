@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { fetchWeatherByCity, fetchForecast } from "@/services/WeatherService";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import { useCity } from "@/contexts/CityContext";
 const WeatherPage = () => {
   const { city, setCity } = useCity();
   const [weather, setWeather] = useState({
-    location: "Delhi",
+    location: "Maharashtra",
     temperature: 24,
     condition: "sunny",
     humidity: 65,
@@ -71,13 +72,16 @@ const WeatherPage = () => {
 
   const handleAssistantQuery = () => {
     if (assistantQuery.trim() === "") return;
-    setConversation(prev => [...prev, { role: "user", content: assistantQuery }]);
+    
+    const userQuery = assistantQuery.trim();
+    setConversation(prev => [...prev, { role: "user", content: userQuery }]);
+    setAssistantQuery("");
     setIsAssistantThinking(true);
+    
     setTimeout(() => {
-      const response = getWeatherAssistantResponse(assistantQuery, weather, forecast);
+      const response = getWeatherAssistantResponse(userQuery, weather, forecast);
       setConversation(prev => [...prev, { role: "assistant", content: response }]);
       setIsAssistantThinking(false);
-      setAssistantQuery("");
     }, 1000);
   };
 
@@ -268,8 +272,12 @@ const WeatherPage = () => {
                       className={`p-3 rounded-lg ${
                         message.role === 'assistant' 
                           ? 'bg-secondary' 
-                          : 'bg-primary text-white ml-auto'
+                          : 'bg-primary text-primary-foreground ml-auto'
                       }`}
+                      style={{ 
+                        maxWidth: 'fit-content',
+                        marginLeft: message.role === 'user' ? 'auto' : 'inherit'
+                      }}
                     >
                       {message.content}
                     </div>
@@ -294,7 +302,12 @@ const WeatherPage = () => {
                   placeholder="Ask me about today's weather, what to wear, forecast, etc."
                   value={assistantQuery}
                   onChange={(e) => setAssistantQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleAssistantQuery())}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAssistantQuery();
+                    }
+                  }}
                   className="min-h-10"
                 />
                 <Button 
