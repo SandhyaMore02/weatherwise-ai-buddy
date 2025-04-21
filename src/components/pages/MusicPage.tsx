@@ -1,17 +1,13 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Music, Play, Pause, SkipBack, SkipForward, 
-  Volume2, Search, Clock, Disc 
-} from "lucide-react";
+import { Music, Play, Pause, SkipBack, SkipForward, Volume2, Search, Clock, Disc } from "lucide-react";
 import { toast } from "sonner";
+import { useCity } from "@/contexts/CityContext";
 
-// Updated music recommendations with guaranteed working audio sources
 const musicRecommendations = {
   sunny: [
     { id: "s1", title: "Summer Vibes", artist: "Chill Wave", mood: "Upbeat", duration: "3:45", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
@@ -30,7 +26,6 @@ const musicRecommendations = {
   ],
 };
 
-// Additional songs from various genres with working audio
 const additionalSongs = [
   { id: "a1", title: "Electric Dreams", artist: "Synth Wave", mood: "Energetic", duration: "3:50", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
   { id: "a2", title: "Acoustic Sunset", artist: "Guitar Dreams", mood: "Relaxing", duration: "3:25", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
@@ -52,6 +47,7 @@ const allSongs = [
 ];
 
 const MusicPage = () => {
+  const { city, setCity } = useCity();
   const [currentCondition, setCurrentCondition] = useState("sunny");
   const songs = musicRecommendations[currentCondition as keyof typeof musicRecommendations];
   const [currentSong, setCurrentSong] = useState(0);
@@ -67,9 +63,7 @@ const MusicPage = () => {
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio();
-    
-    // Add event listeners to handle audio loading and timing
+    audioRef.current = new window.Audio();
     if (audioRef.current) {
       audioRef.current.addEventListener('loadedmetadata', handleMetadataLoaded);
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
@@ -77,12 +71,9 @@ const MusicPage = () => {
       audioRef.current.addEventListener('error', handleAudioError);
       audioRef.current.volume = volume[0] / 100;
     }
-    
-    // Initial audio load
     if (playlistSongs.length > 0) {
       loadAudio();
     }
-    
     return () => {
       if (audioRef.current) {
         audioRef.current.removeEventListener('loadedmetadata', handleMetadataLoaded);
@@ -92,7 +83,6 @@ const MusicPage = () => {
         audioRef.current.pause();
         audioRef.current.src = "";
       }
-      
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
@@ -100,9 +90,7 @@ const MusicPage = () => {
   }, []);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume[0] / 100;
-    }
+    if (audioRef.current) audioRef.current.volume = volume[0] / 100;
   }, [volume]);
 
   useEffect(() => {
@@ -110,7 +98,6 @@ const MusicPage = () => {
     setCurrentSong(0);
     setIsPlaying(false);
     setProgress([0]);
-    
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -118,13 +105,23 @@ const MusicPage = () => {
   }, [currentCondition]);
 
   useEffect(() => {
-    // When current song changes, load the new audio
+    setPlaylistSongs(songs);
+    setCurrentSong(0);
+    setIsPlaying(false);
+    setProgress([0]);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  }, [city]);
+
+  useEffect(() => {
     if (playlistSongs.length > 0 && audioRef.current) {
       loadAudio();
       if (isPlaying) {
         setTimeout(() => {
           playAudio();
-        }, 100); // Small delay to ensure audio is loaded
+        }, 100);
       }
     }
   }, [currentSong, playlistSongs]);
@@ -156,7 +153,6 @@ const MusicPage = () => {
     console.error("Audio playback error:", e);
     toast.error("Could not play this song. Trying next song...");
     
-    // Try next song after a short delay
     setTimeout(() => {
       nextSong();
     }, 500);
@@ -179,7 +175,6 @@ const MusicPage = () => {
   const playAudio = () => {
     if (!audioRef.current || !playlistSongs[currentSong]) return;
     
-    // Reset the audio if it was at the end
     if (audioRef.current.currentTime >= audioRef.current.duration) {
       audioRef.current.currentTime = 0;
     }
@@ -196,7 +191,6 @@ const MusicPage = () => {
           console.error("Audio playback failed:", error);
           toast.error("Could not play audio. Trying another song...");
           setIsPlaying(false);
-          // Try next song after a short delay
           setTimeout(() => {
             nextSong();
           }, 500);
@@ -230,25 +224,20 @@ const MusicPage = () => {
       setIsSearching(false);
       return;
     }
-
-    const filteredResults = allSongs.filter(song => 
+    const filteredResults = allSongs.filter(song =>
       song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
       song.mood.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    
     if (filteredResults.length === 0) {
       toast.error("No songs found matching your search");
       return;
     }
-    
     setPlaylistSongs(filteredResults);
     setCurrentSong(0);
     setIsPlaying(false);
     setProgress([0]);
     toast.success(`Found ${filteredResults.length} songs matching "${searchQuery}"`);
-    
-    // Reset the audio
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -261,8 +250,6 @@ const MusicPage = () => {
     setCurrentSong(0);
     setIsPlaying(false);
     setProgress([0]);
-    
-    // Reset the audio
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -279,7 +266,6 @@ const MusicPage = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Function to handle progress bar clicks
   const handleProgressChange = (newValue: number[]) => {
     if (audioRef.current && songDuration) {
       const newTime = (newValue[0] / 100) * songDuration;
@@ -293,7 +279,7 @@ const MusicPage = () => {
       <h1 className="text-2xl font-bold flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Music className="h-6 w-6 text-primary" />
-          <span>Music</span>
+          <span>Music for <span className="capitalize">{city}</span></span>
         </div>
         <Button 
           variant="ghost" 

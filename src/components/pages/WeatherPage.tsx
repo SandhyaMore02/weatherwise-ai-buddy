@@ -8,8 +8,10 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { useCity } from "@/contexts/CityContext";
 
 const WeatherPage = () => {
+  const { city, setCity } = useCity();
   const [weather, setWeather] = useState({
     location: "Delhi",
     temperature: 24,
@@ -18,46 +20,39 @@ const WeatherPage = () => {
     windSpeed: 12,
     feelsLike: 26
   });
-  const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [forecast, setForecast] = useState<Array<{day: string, temp: number, condition: string}>>([]);
-
-  // For weather assistant
   const [assistantQuery, setAssistantQuery] = useState("");
   const [conversation, setConversation] = useState<{ role: string; content: string }[]>([
     { role: "assistant", content: "Hi! I'm your weather assistant. Ask me anything about weather, climate, or how to prepare for different conditions." }
   ]);
   const [isAssistantThinking, setIsAssistantThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // Load Delhi weather by default for Indian cities focus
-    fetchInitialWeather();
-  }, []);
+    fetchWeatherInfo(city);
+  }, [city]);
 
   useEffect(() => {
-    // Scroll to bottom of messages
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation]);
 
-  const fetchInitialWeather = async () => {
+  const fetchWeatherInfo = async (searchedCity: string) => {
     try {
       setIsLoading(true);
-      const weatherData = await fetchWeatherByCity("Delhi");
+      const weatherData = await fetchWeatherByCity(searchedCity);
       setWeather(weatherData);
-      const forecastData = await fetchForecast("Delhi");
-      
-      // Convert API forecast to UI format
-      const formattedForecast = forecastData.map(item => ({
+      setCity(weatherData.location);
+      const forecastData = await fetchForecast(searchedCity);
+      setForecast(forecastData.map(item => ({
         day: item.day,
         temp: item.temp,
         condition: item.condition
-      }));
-      
-      setForecast(formattedForecast);
+      })));
     } catch (error) {
-      toast.error("Could not fetch weather for Delhi. Please try a different city.");
+      toast.error("Could not fetch weather. Please try another city.");
     } finally {
       setIsLoading(false);
     }
@@ -68,47 +63,16 @@ const WeatherPage = () => {
       toast.error("Please enter a location");
       return;
     }
-
-    setIsLoading(true);
-    try {
-      const weatherData = await fetchWeatherByCity(searchQuery);
-      setWeather(weatherData);
-      
-      // Get forecast data
-      const forecastData = await fetchForecast(searchQuery);
-      
-      // Convert API forecast to UI format
-      const formattedForecast = forecastData.map(item => ({
-        day: item.day,
-        temp: item.temp,
-        condition: item.condition
-      }));
-      
-      setForecast(formattedForecast);
-      setSearchQuery("");
-      setIsSearchOpen(false);
-      toast.success(`Weather updated for ${weatherData.location}`);
-    } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.message === "city not found") {
-        toast.error(`City "${searchQuery}" not found. Please check the spelling and try again.`);
-      } else {
-        toast.error("Could not fetch weather data. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    await fetchWeatherInfo(searchQuery);
+    setSearchQuery("");
+    setIsSearchOpen(false);
+    toast.success(`Weather updated for ${searchQuery}`);
   };
 
   const handleAssistantQuery = () => {
     if (assistantQuery.trim() === "") return;
-
-    // Add user message to conversation
     setConversation(prev => [...prev, { role: "user", content: assistantQuery }]);
-    
-    // Simulate AI thinking
     setIsAssistantThinking(true);
-    
-    // Get weather-related response
     setTimeout(() => {
       const response = getWeatherAssistantResponse(assistantQuery, weather, forecast);
       setConversation(prev => [...prev, { role: "assistant", content: response }]);
@@ -120,8 +84,6 @@ const WeatherPage = () => {
   const getWeatherAssistantResponse = (query: string, weatherData: any, forecastData: any[]) => {
     const lowerQuery = query.toLowerCase();
     
-    // Very basic pattern matching for demo purposes
-    // In a real app, you'd use a more sophisticated NLP approach or an actual AI API
     if (lowerQuery.includes("rain") || lowerQuery.includes("umbrella")) {
       if (weatherData.condition === "rain" || weatherData.condition === "drizzle") {
         return "Yes, it's currently raining in " + weatherData.location + ". Don't forget your umbrella!";
@@ -210,7 +172,7 @@ const WeatherPage = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-muted-foreground">
           <MapPin className="h-4 w-4" />
-          <span>{weather.location}</span>
+          <span className="capitalize">{city}</span>
           {isLoading && <span className="text-xs">(Loading...)</span>}
         </div>
         <Button 
