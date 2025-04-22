@@ -60,6 +60,7 @@ const NotificationSettings = () => {
   const [outfitSuggestions, setOutfitSuggestions] = useState(true);
   const [travelTips, setTravelTips] = useState(true);
   const [musicRecommendations, setMusicRecommendations] = useState(true);
+  const [permissionStatus, setPermissionStatus] = useState<string>('default');
 
   // Load saved settings on component mount
   useEffect(() => {
@@ -77,9 +78,51 @@ const NotificationSettings = () => {
         console.error("Error loading notification settings:", error);
       }
     }
+
+    // Check current permission status on load
+    checkNotificationPermission();
   }, []);
 
-  const handleSaveSettings = () => {
+  // Check notification permission status
+  const checkNotificationPermission = () => {
+    if (!("Notification" in window)) {
+      setPermissionStatus('unsupported');
+      return;
+    }
+    
+    setPermissionStatus(Notification.permission);
+  };
+
+  // Request notification permission
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      toast.error("Notifications are not supported in this browser");
+      return false;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setPermissionStatus(permission);
+      
+      // On mobile, we need to be more explicit about the status
+      if (permission === "granted") {
+        toast.success("Notification permission granted");
+        return true;
+      } else if (permission === "denied") {
+        toast.error("Notification permission denied. Please enable notifications in your device settings.");
+        return false;
+      } else {
+        toast.warning("Notification permission not granted. Please try again.");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+      toast.error("Failed to request notification permission");
+      return false;
+    }
+  };
+
+  const handleSaveSettings = async () => {
     // Save notification settings to local storage
     const settings = {
       enabled: notificationsEnabled,
@@ -93,40 +136,83 @@ const NotificationSettings = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     
     // Check permissions if notifications are enabled
-    if (notificationsEnabled && "Notification" in window) {
-      if (Notification.permission === "granted") {
+    if (notificationsEnabled) {
+      if (permissionStatus === "granted") {
         showNotification();
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-          if (permission === "granted") {
-            showNotification();
-          } else {
-            toast.warning("Please enable browser notifications for the best experience");
-          }
-        });
+        toast.success("Notification settings saved successfully");
       } else {
-        toast.warning("Notifications are blocked. Please update your browser settings.");
+        const permissionGranted = await requestNotificationPermission();
+        if (permissionGranted) {
+          showNotification();
+        } else {
+          // Guide users to their device settings
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (isMobile) {
+            toast.warning(
+              "Please enable notifications in your device settings: Settings > Apps > WeatherWise > Notifications",
+              { duration: 5000 }
+            );
+          }
+        }
       }
-    } else if (notificationsEnabled) {
-      toast.warning("Browser notifications are not supported in this browser");
     } else {
       toast.success("Notification settings saved successfully");
     }
   };
 
   const showNotification = () => {
-    const message = `Notifications will be sent at ${notificationTime}`;
-    toast.success(message);
+    // Show different notification types based on enabled settings
+    let notificationTitle = "WeatherWise";
+    let notificationBody = `Daily update for ${new Date().toLocaleDateString()}`;
     
-    // Show a test notification
+    // Add details based on user preferences
+    const details = [];
+    if (weatherUpdates) details.push("weather updates");
+    if (outfitSuggestions) details.push("outfit suggestions");
+    if (travelTips) details.push("travel tips");
+    if (musicRecommendations) details.push("music recommendations");
+    
+    if (details.length > 0) {
+      notificationBody += `: You'll receive ${details.join(", ")} at ${notificationTime}`;
+    }
+    
+    // Create and show the test notification
     try {
-      new Notification("WeatherWise Notifications Enabled", {
-        body: `You'll receive daily updates at ${notificationTime}`,
-        icon: "/favicon.ico"
-      });
+      // Check if service worker is available for better mobile support
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification(notificationTitle, {
+            body: notificationBody,
+            icon: "/favicon.ico",
+            vibrate: [200, 100, 200],
+            tag: "weatherwise-notification",
+          }).catch(error => {
+            console.error("Service worker notification error:", error);
+            fallbackNotification(notificationTitle, notificationBody);
+          });
+        }).catch(error => {
+          console.error("Service worker not ready:", error);
+          fallbackNotification(notificationTitle, notificationBody);
+        });
+      } else {
+        fallbackNotification(notificationTitle, notificationBody);
+      }
     } catch (error) {
       console.error("Error creating notification:", error);
       toast.error("Could not create notification");
+    }
+  };
+
+  // Fallback to basic notification if service worker isn't available
+  const fallbackNotification = (title: string, body: string) => {
+    try {
+      new Notification(title, {
+        body: body,
+        icon: "/favicon.ico"
+      });
+    } catch (error) {
+      console.error("Fallback notification error:", error);
+      toast.error("Could not create notification. Please check your browser settings.");
     }
   };
 
@@ -217,6 +303,15 @@ const NotificationSettings = () => {
         <Button onClick={handleSaveSettings} className="w-full">
           Save Settings
         </Button>
+        
+        {permissionStatus === 'denied' && (
+          <div className="p-3 bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-md text-sm">
+            <p className="font-medium">Notifications are blocked</p>
+            <p className="mt-1">
+              Please enable notifications in your device settings to receive weather updates.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NotificationSettings from "@/components/NotificationSettings";
-import { Settings, User, Globe, Info } from "lucide-react";
+import { Settings, User, Globe, Info, Bell } from "lucide-react";
 import { useCity } from "@/contexts/CityContext";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const SettingsPage = () => {
   const { city } = useCity();
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   return (
     <div className="p-4 space-y-6">
@@ -14,6 +16,17 @@ const SettingsPage = () => {
         <Settings className="h-6 w-6 text-primary" />
         Settings
       </h1>
+      
+      {isMobile && (
+        <Alert>
+          <Bell className="h-4 w-4" />
+          <AlertTitle>Enable Notifications</AlertTitle>
+          <AlertDescription>
+            For the best experience, please ensure notifications are enabled in your device settings.
+            Go to: Settings &gt; Apps &gt; WeatherWise &gt; Notifications
+          </AlertDescription>
+        </Alert>
+      )}
       
       <NotificationSettings />
       
