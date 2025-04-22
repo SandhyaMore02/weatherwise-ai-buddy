@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { fetchWeatherByCity, fetchForecast } from "@/services/WeatherService";
 import { Card, CardContent } from "@/components/ui/card";
@@ -175,17 +174,14 @@ const WeatherPage = () => {
       }
     }
 
-    // General inquiries about the weather condition
     if (lowerQuery.includes("how") && lowerQuery.includes("weather")) {
       return `The current weather in ${weatherData.location} is ${weatherData.condition} with a temperature of ${weatherData.temperature}°C. It feels like ${weatherData.feelsLike}°C with ${weatherData.humidity}% humidity and wind speed of ${weatherData.windSpeed} km/h.`;
     }
 
-    // Handle greetings
     if (lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey")) {
       return `Hello! I'm your weather assistant for ${weatherData.location}. The current weather is ${weatherData.condition} at ${weatherData.temperature}°C. How can I help you today?`;
     }
 
-    // Default response
     return `I'm your weather assistant for ${weatherData.location}. Current conditions are ${weatherData.temperature}°C and ${weatherData.condition}. Ask me anything about the weather!`;
   };
 
