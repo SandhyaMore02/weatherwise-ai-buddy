@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,56 +6,15 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
+import TimePicker from "./TimePicker";
+import NotificationTypeToggles from "./NotificationTypeToggles";
+import PermissionStatusAlert from "./PermissionStatusAlert";
 
-type TimePickerProps = {
-  value: string;
-  onChange: (value: string) => void;
-};
-
-// Simple time picker component
-const TimePicker: React.FC<TimePickerProps> = ({ value, onChange }) => {
-  return (
-    <div className="flex items-center justify-center gap-2">
-      <select
-        className="bg-background border border-input rounded px-2 py-1"
-        value={value.split(':')[0]}
-        onChange={(e) => {
-          const hour = e.target.value;
-          const minute = value.split(':')[1];
-          onChange(`${hour}:${minute}`);
-        }}
-      >
-        {Array.from({ length: 24 }).map((_, i) => (
-          <option key={i} value={i.toString().padStart(2, '0')}>
-            {i.toString().padStart(2, '0')}
-          </option>
-        ))}
-      </select>
-      <span>:</span>
-      <select
-        className="bg-background border border-input rounded px-2 py-1"
-        value={value.split(':')[1]}
-        onChange={(e) => {
-          const hour = value.split(':')[0];
-          const minute = e.target.value;
-          onChange(`${hour}:${minute}`);
-        }}
-      >
-        {Array.from({ length: 60 }).map((_, i) => (
-          <option key={i} value={i.toString().padStart(2, '0')}>
-            {i.toString().padStart(2, '0')}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-};
+const STORAGE_KEY = "weatherwise-notification-settings";
 
 interface ExtendedNotificationOptions extends NotificationOptions {
   vibrate?: number[];
 }
-
-const STORAGE_KEY = "weatherwise-notification-settings";
 
 const NotificationSettings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -89,7 +49,6 @@ const NotificationSettings = () => {
       setPermissionStatus('unsupported');
       return;
     }
-    
     setPermissionStatus(Notification.permission);
   };
 
@@ -98,11 +57,10 @@ const NotificationSettings = () => {
       toast.error("Notifications are not supported in this browser");
       return false;
     }
-
     try {
       const permission = await Notification.requestPermission();
       setPermissionStatus(permission);
-      
+
       if (permission === "granted") {
         toast.success("Notification permission granted");
         return true;
@@ -129,9 +87,8 @@ const NotificationSettings = () => {
       travelTips,
       musicRecommendations
     };
-    
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    
+
     if (notificationsEnabled) {
       if (permissionStatus === "granted") {
         showNotification();
@@ -158,17 +115,17 @@ const NotificationSettings = () => {
   const showNotification = () => {
     let notificationTitle = "WeatherWise";
     let notificationBody = `Daily update for ${new Date().toLocaleDateString()}`;
-    
+
     const details = [];
     if (weatherUpdates) details.push("weather updates");
     if (outfitSuggestions) details.push("outfit suggestions");
     if (travelTips) details.push("travel tips");
     if (musicRecommendations) details.push("music recommendations");
-    
+
     if (details.length > 0) {
       notificationBody += `: You'll receive ${details.join(", ")} at ${notificationTime}`;
     }
-    
+
     try {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(registration => {
@@ -177,11 +134,9 @@ const NotificationSettings = () => {
             icon: "/favicon.ico",
             tag: "weatherwise-notification",
           };
-          
           if ('vibrate' in navigator) {
             options.vibrate = [200, 100, 200];
           }
-          
           registration.showNotification(notificationTitle, options)
             .catch(error => {
               console.error("Service worker notification error:", error);
@@ -229,13 +184,13 @@ const NotificationSettings = () => {
           <Label htmlFor="notifications" className="flex items-center gap-2">
             Enable daily notifications
           </Label>
-          <Switch 
-            id="notifications" 
+          <Switch
+            id="notifications"
             checked={notificationsEnabled}
             onCheckedChange={setNotificationsEnabled}
           />
         </div>
-        
+
         {notificationsEnabled && (
           <>
             <div className="space-y-2">
@@ -245,68 +200,25 @@ const NotificationSettings = () => {
                 You'll receive daily updates at this time
               </p>
             </div>
-            
-            <div className="space-y-4">
-              <h3 className="font-medium">Include in notifications:</h3>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="weatherUpdates" className="flex items-center gap-2">
-                  Weather updates
-                </Label>
-                <Switch 
-                  id="weatherUpdates" 
-                  checked={weatherUpdates}
-                  onCheckedChange={setWeatherUpdates}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="outfitSuggestions" className="flex items-center gap-2">
-                  Outfit suggestions
-                </Label>
-                <Switch 
-                  id="outfitSuggestions" 
-                  checked={outfitSuggestions}
-                  onCheckedChange={setOutfitSuggestions}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="travelTips" className="flex items-center gap-2">
-                  Travel tips
-                </Label>
-                <Switch 
-                  id="travelTips" 
-                  checked={travelTips}
-                  onCheckedChange={setTravelTips}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="musicRecommendations" className="flex items-center gap-2">
-                  Music recommendations
-                </Label>
-                <Switch 
-                  id="musicRecommendations" 
-                  checked={musicRecommendations}
-                  onCheckedChange={setMusicRecommendations}
-                />
-              </div>
-            </div>
+            <NotificationTypeToggles
+              weatherUpdates={weatherUpdates}
+              setWeatherUpdates={setWeatherUpdates}
+              outfitSuggestions={outfitSuggestions}
+              setOutfitSuggestions={setOutfitSuggestions}
+              travelTips={travelTips}
+              setTravelTips={setTravelTips}
+              musicRecommendations={musicRecommendations}
+              setMusicRecommendations={setMusicRecommendations}
+            />
           </>
         )}
-        
+
         <Button onClick={handleSaveSettings} className="w-full">
           Save Settings
         </Button>
-        
+
         {permissionStatus === 'denied' && (
-          <div className="p-3 bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-md text-sm">
-            <p className="font-medium">Notifications are blocked</p>
-            <p className="mt-1">
-              Please enable notifications in your device settings to receive weather updates.
-            </p>
-          </div>
+          <PermissionStatusAlert />
         )}
       </CardContent>
     </Card>
