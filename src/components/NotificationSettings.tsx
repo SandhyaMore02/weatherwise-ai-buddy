@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +50,10 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange }) => {
   );
 };
 
+interface ExtendedNotificationOptions extends NotificationOptions {
+  vibrate?: number[];
+}
+
 const STORAGE_KEY = "weatherwise-notification-settings";
 
 const NotificationSettings = () => {
@@ -62,7 +65,6 @@ const NotificationSettings = () => {
   const [musicRecommendations, setMusicRecommendations] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string>('default');
 
-  // Load saved settings on component mount
   useEffect(() => {
     const savedSettings = localStorage.getItem(STORAGE_KEY);
     if (savedSettings) {
@@ -79,11 +81,9 @@ const NotificationSettings = () => {
       }
     }
 
-    // Check current permission status on load
     checkNotificationPermission();
   }, []);
 
-  // Check notification permission status
   const checkNotificationPermission = () => {
     if (!("Notification" in window)) {
       setPermissionStatus('unsupported');
@@ -93,7 +93,6 @@ const NotificationSettings = () => {
     setPermissionStatus(Notification.permission);
   };
 
-  // Request notification permission
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
       toast.error("Notifications are not supported in this browser");
@@ -104,7 +103,6 @@ const NotificationSettings = () => {
       const permission = await Notification.requestPermission();
       setPermissionStatus(permission);
       
-      // On mobile, we need to be more explicit about the status
       if (permission === "granted") {
         toast.success("Notification permission granted");
         return true;
@@ -123,7 +121,6 @@ const NotificationSettings = () => {
   };
 
   const handleSaveSettings = async () => {
-    // Save notification settings to local storage
     const settings = {
       enabled: notificationsEnabled,
       time: notificationTime,
@@ -135,7 +132,6 @@ const NotificationSettings = () => {
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     
-    // Check permissions if notifications are enabled
     if (notificationsEnabled) {
       if (permissionStatus === "granted") {
         showNotification();
@@ -145,7 +141,6 @@ const NotificationSettings = () => {
         if (permissionGranted) {
           showNotification();
         } else {
-          // Guide users to their device settings
           const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
           if (isMobile) {
             toast.warning(
@@ -161,11 +156,9 @@ const NotificationSettings = () => {
   };
 
   const showNotification = () => {
-    // Show different notification types based on enabled settings
     let notificationTitle = "WeatherWise";
     let notificationBody = `Daily update for ${new Date().toLocaleDateString()}`;
     
-    // Add details based on user preferences
     const details = [];
     if (weatherUpdates) details.push("weather updates");
     if (outfitSuggestions) details.push("outfit suggestions");
@@ -176,20 +169,24 @@ const NotificationSettings = () => {
       notificationBody += `: You'll receive ${details.join(", ")} at ${notificationTime}`;
     }
     
-    // Create and show the test notification
     try {
-      // Check if service worker is available for better mobile support
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(registration => {
-          registration.showNotification(notificationTitle, {
+          const options: ExtendedNotificationOptions = {
             body: notificationBody,
             icon: "/favicon.ico",
-            vibrate: [200, 100, 200],
             tag: "weatherwise-notification",
-          }).catch(error => {
-            console.error("Service worker notification error:", error);
-            fallbackNotification(notificationTitle, notificationBody);
-          });
+          };
+          
+          if ('vibrate' in navigator) {
+            options.vibrate = [200, 100, 200];
+          }
+          
+          registration.showNotification(notificationTitle, options)
+            .catch(error => {
+              console.error("Service worker notification error:", error);
+              fallbackNotification(notificationTitle, notificationBody);
+            });
         }).catch(error => {
           console.error("Service worker not ready:", error);
           fallbackNotification(notificationTitle, notificationBody);
@@ -203,7 +200,6 @@ const NotificationSettings = () => {
     }
   };
 
-  // Fallback to basic notification if service worker isn't available
   const fallbackNotification = (title: string, body: string) => {
     try {
       new Notification(title, {
