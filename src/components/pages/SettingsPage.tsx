@@ -1,14 +1,42 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import NotificationSettings from "@/components/NotificationSettings";
 import { Settings, User, Globe, Info, Bell } from "lucide-react";
 import { useCity } from "@/contexts/CityContext";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 const SettingsPage = () => {
   const { city } = useCity();
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const [permissionStatus, setPermissionStatus] = useState(
+    "Notification" in window ? Notification.permission : "unsupported"
+  );
+
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      toast.error("Notifications are not supported in this browser");
+      return;
+    }
+    
+    try {
+      const permission = await Notification.requestPermission();
+      setPermissionStatus(permission);
+      
+      if (permission === "granted") {
+        toast.success("Notification permission granted! You can now receive weather updates.");
+      } else if (permission === "denied") {
+        toast.error("Notification permission denied. Please enable notifications in your browser settings.");
+      } else {
+        toast.warning("Notification permission request was dismissed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+      toast.error("Failed to request notification permission");
+    }
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -17,13 +45,20 @@ const SettingsPage = () => {
         Settings
       </h1>
       
-      {isMobile && (
+      {isMobile && permissionStatus !== "granted" && (
         <Alert>
           <Bell className="h-4 w-4" />
           <AlertTitle>Enable Notifications</AlertTitle>
-          <AlertDescription>
-            For the best experience, please ensure notifications are enabled in your device settings.
-            Go to: Settings &gt; Apps &gt; WeatherWise &gt; Notifications
+          <AlertDescription className="flex flex-col gap-2">
+            <p>For the best experience, please ensure notifications are enabled.</p>
+            <Button 
+              onClick={requestNotificationPermission}
+              variant="outline"
+              className="bg-background border-primary text-primary hover:bg-primary/10 w-full"
+            >
+              <Bell className="mr-2 h-4 w-4" />
+              Allow Notifications
+            </Button>
           </AlertDescription>
         </Alert>
       )}

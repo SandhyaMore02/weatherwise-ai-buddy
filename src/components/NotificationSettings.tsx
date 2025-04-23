@@ -44,6 +44,11 @@ const NotificationSettings = () => {
     checkNotificationPermission();
   }, []);
 
+  useEffect(() => {
+    // Update permission status whenever the component rerenders
+    checkNotificationPermission();
+  });
+
   const checkNotificationPermission = () => {
     if (!("Notification" in window)) {
       setPermissionStatus('unsupported');
@@ -78,16 +83,46 @@ const NotificationSettings = () => {
     }
   };
 
-  const handleSaveSettings = async () => {
+  const handleToggleNotifications = async (checked: boolean) => {
+    if (checked && permissionStatus !== 'granted') {
+      const permissionGranted = await requestNotificationPermission();
+      if (!permissionGranted) {
+        return; // Don't enable notifications if permission isn't granted
+      }
+    }
+    
+    setNotificationsEnabled(checked);
+    saveSettings(checked, notificationTime, weatherUpdates, outfitSuggestions, travelTips, musicRecommendations);
+  };
+
+  const saveSettings = (
+    enabled: boolean, 
+    time: string, 
+    weather: boolean, 
+    outfit: boolean, 
+    travel: boolean, 
+    music: boolean
+  ) => {
     const settings = {
-      enabled: notificationsEnabled,
-      time: notificationTime,
+      enabled,
+      time,
+      weatherUpdates: weather,
+      outfitSuggestions: outfit,
+      travelTips: travel,
+      musicRecommendations: music
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  };
+
+  const handleSaveSettings = async () => {
+    saveSettings(
+      notificationsEnabled,
+      notificationTime,
       weatherUpdates,
       outfitSuggestions,
       travelTips,
       musicRecommendations
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    );
 
     if (notificationsEnabled) {
       if (permissionStatus === "granted") {
@@ -187,9 +222,13 @@ const NotificationSettings = () => {
           <Switch
             id="notifications"
             checked={notificationsEnabled}
-            onCheckedChange={setNotificationsEnabled}
+            onCheckedChange={handleToggleNotifications}
           />
         </div>
+
+        {permissionStatus === 'denied' && (
+          <PermissionStatusAlert />
+        )}
 
         {notificationsEnabled && (
           <>
@@ -216,10 +255,6 @@ const NotificationSettings = () => {
         <Button onClick={handleSaveSettings} className="w-full">
           Save Settings
         </Button>
-
-        {permissionStatus === 'denied' && (
-          <PermissionStatusAlert />
-        )}
       </CardContent>
     </Card>
   );
