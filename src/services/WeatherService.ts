@@ -45,13 +45,18 @@ export const fetchForecast = async (city: string): Promise<ForecastItem[]> => {
     const forecastData = response.data.list;
     const processed: ForecastItem[] = [];
     
-    // Full day names
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     // Short day names
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     // Get current day
     const today = new Date().getDay();
+    
+    // Create a 7-day sequence starting from tomorrow
+    const daySequence: string[] = [];
+    for (let i = 1; i <= 7; i++) {
+      const dayIndex = (today + i) % 7;
+      daySequence.push(days[dayIndex]);
+    }
     
     // Group forecasts by day (taking noon forecast as representative)
     const dailyForecasts = new Map<string, any>();
@@ -76,30 +81,31 @@ export const fetchForecast = async (city: string): Promise<ForecastItem[]> => {
     }
     
     // Convert the map to array and sort by date
-    Array.from(dailyForecasts.values())
+    const sortedForecasts = Array.from(dailyForecasts.values())
       .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 7) // Changed from 6 to 7 days
-      .forEach(item => {
-        processed.push({
-          date: item.date,
-          day: item.day,
-          temp: Math.round(item.data.main.temp),
-          condition: item.data.weather[0].main.toLowerCase()
-        });
-      });
+      .slice(0, 7);
     
-    // If we don't have 7 days yet, add forecast for future days
-    if (processed.length < 7) { // Changed from 6 to 7
-      const lastDate = processed.length > 0 
-        ? new Date(processed[processed.length - 1].date) 
-        : new Date();
-      
-      while (processed.length < 7) { // Changed from 6 to 7
+    // Make sure we have exactly 7 days with the correct sequence
+    for (let i = 0; i < 7; i++) {
+      if (i < sortedForecasts.length) {
+        // Use real forecast data
+        processed.push({
+          date: sortedForecasts[i].date,
+          day: daySequence[i], // Use the sequence day instead of the actual day
+          temp: Math.round(sortedForecasts[i].data.main.temp),
+          condition: sortedForecasts[i].data.weather[0].main.toLowerCase()
+        });
+      } else {
+        // Fill remaining days with placeholder data
+        const lastDate = processed.length > 0 
+          ? new Date(processed[processed.length - 1].date) 
+          : new Date();
+        
         lastDate.setDate(lastDate.getDate() + 1);
-        const nextDay = lastDate.getDay();
+        
         processed.push({
           date: lastDate.toISOString().split('T')[0],
-          day: days[nextDay],
+          day: daySequence[i],
           temp: Math.round(Math.random() * 5 + 20), // Placeholder temp (20-25°C)
           condition: "clear" // Default condition
         });
@@ -112,4 +118,3 @@ export const fetchForecast = async (city: string): Promise<ForecastItem[]> => {
     throw error;
   }
 };
-
