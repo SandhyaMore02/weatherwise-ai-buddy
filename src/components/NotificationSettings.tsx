@@ -1,118 +1,53 @@
-import { useState, useEffect } from "react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import TimePicker from "./TimePicker";
 import NotificationTypeToggles from "./NotificationTypeToggles";
 import PermissionStatusAlert from "./PermissionStatusAlert";
-
-const STORAGE_KEY = "weatherwise-notification-settings";
-
-interface ExtendedNotificationOptions extends NotificationOptions {
-  vibrate?: number[];
-}
+import { useNotifications } from "@/hooks/useNotifications";
+import NotificationPreview from "./NotificationPreview";
 
 const NotificationSettings = () => {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [notificationTime, setNotificationTime] = useState("08:00");
-  const [weatherUpdates, setWeatherUpdates] = useState(true);
-  const [outfitSuggestions, setOutfitSuggestions] = useState(true);
-  const [travelTips, setTravelTips] = useState(true);
-  const [musicRecommendations, setMusicRecommendations] = useState(true);
-  const [permissionStatus, setPermissionStatus] = useState<string>('default');
-  const [isNotificationsSupported, setIsNotificationsSupported] = useState(true);
+  const {
+    notificationsEnabled,
+    setNotificationsEnabled,
+    notificationTime,
+    setNotificationTime,
+    weatherUpdates,
+    setWeatherUpdates,
+    outfitSuggestions,
+    setOutfitSuggestions,
+    travelTips,
+    setTravelTips,
+    musicRecommendations,
+    setMusicRecommendations,
+    permissionStatus,
+    isNotificationsSupported,
+    requestNotificationPermission,
+    saveSettings
+  } = useNotifications();
 
-  useEffect(() => {
-    setIsNotificationsSupported("Notification" in window);
-    
-    const savedSettings = localStorage.getItem(STORAGE_KEY);
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setNotificationsEnabled(parsedSettings.enabled || false);
-        setNotificationTime(parsedSettings.time || "08:00");
-        setWeatherUpdates(parsedSettings.weatherUpdates !== false);
-        setOutfitSuggestions(parsedSettings.outfitSuggestions !== false);
-        setTravelTips(parsedSettings.travelTips !== false);
-        setMusicRecommendations(parsedSettings.musicRecommendations !== false);
-      } catch (error) {
-        console.error("Error loading notification settings:", error);
-      }
-    }
-
-    checkNotificationPermission();
-  }, []);
-
-  useEffect(() => {
-    checkNotificationPermission();
+  const { showNotification } = NotificationPreview({
+    notificationsEnabled,
+    weatherUpdates,
+    outfitSuggestions,
+    travelTips,
+    musicRecommendations,
+    notificationTime
   });
-
-  const checkNotificationPermission = () => {
-    if (!("Notification" in window)) {
-      setPermissionStatus('unsupported');
-      return;
-    }
-    setPermissionStatus(Notification.permission);
-  };
-
-  const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) {
-      toast.error("Notifications are not supported in this browser");
-      return false;
-    }
-    try {
-      const permission = await Notification.requestPermission();
-      setPermissionStatus(permission);
-
-      if (permission === "granted") {
-        toast.success("Notification permission granted");
-        return true;
-      } else if (permission === "denied") {
-        toast.error("Notification permission denied. Please enable notifications in your device settings.");
-        return false;
-      } else {
-        toast.warning("Notification permission not granted. Please try again.");
-        return false;
-      }
-    } catch (error) {
-      console.error("Error requesting notification permission:", error);
-      toast.error("Failed to request notification permission");
-      return false;
-    }
-  };
 
   const handleToggleNotifications = async (checked: boolean) => {
     if (checked && permissionStatus !== 'granted') {
       const permissionGranted = await requestNotificationPermission();
       if (!permissionGranted) {
-        return; // Don't enable notifications if permission isn't granted
+        return;
       }
     }
     
     setNotificationsEnabled(checked);
     saveSettings(checked, notificationTime, weatherUpdates, outfitSuggestions, travelTips, musicRecommendations);
-  };
-
-  const saveSettings = (
-    enabled: boolean, 
-    time: string, 
-    weather: boolean, 
-    outfit: boolean, 
-    travel: boolean, 
-    music: boolean
-  ) => {
-    const settings = {
-      enabled,
-      time,
-      weatherUpdates: weather,
-      outfitSuggestions: outfit,
-      travelTips: travel,
-      musicRecommendations: music
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   };
 
   const handleSaveSettings = async () => {
@@ -133,73 +68,10 @@ const NotificationSettings = () => {
         const permissionGranted = await requestNotificationPermission();
         if (permissionGranted) {
           showNotification();
-        } else {
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          if (isMobile) {
-            toast.warning(
-              "Please enable notifications in your device settings: Settings > Apps > WeatherWise > Notifications",
-              { duration: 5000 }
-            );
-          }
         }
       }
     } else {
       toast.success("Notification settings saved successfully");
-    }
-  };
-
-  const showNotification = () => {
-    let notificationTitle = "WeatherWise";
-    let notificationBody = `Daily update for ${new Date().toLocaleDateString()}`;
-
-    const details = [];
-    if (weatherUpdates) details.push("weather updates");
-    if (outfitSuggestions) details.push("outfit suggestions");
-    if (travelTips) details.push("travel tips");
-    if (musicRecommendations) details.push("music recommendations");
-
-    if (details.length > 0) {
-      notificationBody += `: You'll receive ${details.join(", ")} at ${notificationTime}`;
-    }
-
-    try {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(registration => {
-          const options: ExtendedNotificationOptions = {
-            body: notificationBody,
-            icon: "/favicon.ico",
-            tag: "weatherwise-notification",
-          };
-          if ('vibrate' in navigator) {
-            options.vibrate = [200, 100, 200];
-          }
-          registration.showNotification(notificationTitle, options)
-            .catch(error => {
-              console.error("Service worker notification error:", error);
-              fallbackNotification(notificationTitle, notificationBody);
-            });
-        }).catch(error => {
-          console.error("Service worker not ready:", error);
-          fallbackNotification(notificationTitle, notificationBody);
-        });
-      } else {
-        fallbackNotification(notificationTitle, notificationBody);
-      }
-    } catch (error) {
-      console.error("Error creating notification:", error);
-      toast.error("Could not create notification");
-    }
-  };
-
-  const fallbackNotification = (title: string, body: string) => {
-    try {
-      new Notification(title, {
-        body: body,
-        icon: "/favicon.ico"
-      });
-    } catch (error) {
-      console.error("Fallback notification error:", error);
-      toast.error("Could not create notification. Please check your browser settings.");
     }
   };
 
