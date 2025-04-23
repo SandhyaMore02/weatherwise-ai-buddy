@@ -1,9 +1,15 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Settings, Info } from "lucide-react";
 
-const PermissionStatusAlert: React.FC = () => {
+interface PermissionStatusAlertProps {
+  type?: "blocked" | "unsupported";
+}
+
+const PermissionStatusAlert: React.FC<PermissionStatusAlertProps> = ({ 
+  type = "blocked" 
+}) => {
   const openSettings = () => {
     // This will direct user to browser settings on most mobile browsers
     // For desktop browsers, provide guidance
@@ -21,6 +27,20 @@ const PermissionStatusAlert: React.FC = () => {
     
     alert("Please enable notifications for this site in your browser settings");
   };
+
+  if (type === "unsupported") {
+    return (
+      <div className="p-3 bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 rounded-md text-sm">
+        <div className="flex items-center gap-2">
+          <Info className="h-5 w-5 flex-shrink-0" />
+          <p className="font-medium">Notifications are not supported</p>
+        </div>
+        <p className="mt-2">
+          Your browser doesn't support push notifications. For the best experience, try using Chrome, Firefox, Safari, or Edge.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-md text-sm">

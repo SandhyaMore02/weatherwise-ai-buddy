@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,8 +23,11 @@ const NotificationSettings = () => {
   const [travelTips, setTravelTips] = useState(true);
   const [musicRecommendations, setMusicRecommendations] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string>('default');
+  const [isNotificationsSupported, setIsNotificationsSupported] = useState(true);
 
   useEffect(() => {
+    setIsNotificationsSupported("Notification" in window);
+    
     const savedSettings = localStorage.getItem(STORAGE_KEY);
     if (savedSettings) {
       try {
@@ -45,7 +47,6 @@ const NotificationSettings = () => {
   }, []);
 
   useEffect(() => {
-    // Update permission status whenever the component rerenders
     checkNotificationPermission();
   });
 
@@ -215,44 +216,55 @@ const NotificationSettings = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="notifications" className="flex items-center gap-2">
-            Enable daily notifications
-          </Label>
-          <Switch
-            id="notifications"
-            checked={notificationsEnabled}
-            onCheckedChange={handleToggleNotifications}
-          />
-        </div>
-
-        {permissionStatus === 'denied' && (
-          <PermissionStatusAlert />
-        )}
-
-        {notificationsEnabled && (
+        {!isNotificationsSupported ? (
+          <PermissionStatusAlert type="unsupported" />
+        ) : (
           <>
-            <div className="space-y-2">
-              <Label htmlFor="notificationTime">Notification Time</Label>
-              <TimePicker value={notificationTime} onChange={setNotificationTime} />
-              <p className="text-xs text-muted-foreground mt-1">
-                You'll receive daily updates at this time
-              </p>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="notifications" className="flex items-center gap-2">
+                Enable daily notifications
+              </Label>
+              <Switch
+                id="notifications"
+                checked={notificationsEnabled}
+                onCheckedChange={handleToggleNotifications}
+                disabled={!isNotificationsSupported}
+              />
             </div>
-            <NotificationTypeToggles
-              weatherUpdates={weatherUpdates}
-              setWeatherUpdates={setWeatherUpdates}
-              outfitSuggestions={outfitSuggestions}
-              setOutfitSuggestions={setOutfitSuggestions}
-              travelTips={travelTips}
-              setTravelTips={setTravelTips}
-              musicRecommendations={musicRecommendations}
-              setMusicRecommendations={setMusicRecommendations}
-            />
+
+            {permissionStatus === 'denied' && (
+              <PermissionStatusAlert type="blocked" />
+            )}
+
+            {notificationsEnabled && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="notificationTime">Notification Time</Label>
+                  <TimePicker value={notificationTime} onChange={setNotificationTime} />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You'll receive daily updates at this time
+                  </p>
+                </div>
+                <NotificationTypeToggles
+                  weatherUpdates={weatherUpdates}
+                  setWeatherUpdates={setWeatherUpdates}
+                  outfitSuggestions={outfitSuggestions}
+                  setOutfitSuggestions={setOutfitSuggestions}
+                  travelTips={travelTips}
+                  setTravelTips={setTravelTips}
+                  musicRecommendations={musicRecommendations}
+                  setMusicRecommendations={setMusicRecommendations}
+                />
+              </>
+            )}
           </>
         )}
 
-        <Button onClick={handleSaveSettings} className="w-full">
+        <Button 
+          onClick={handleSaveSettings} 
+          className="w-full"
+          disabled={!isNotificationsSupported}
+        >
           Save Settings
         </Button>
       </CardContent>

@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import NotificationSettings from "@/components/NotificationSettings";
@@ -14,6 +13,17 @@ const SettingsPage = () => {
   const [permissionStatus, setPermissionStatus] = useState(
     "Notification" in window ? Notification.permission : "unsupported"
   );
+  const [isNotificationsSupported, setIsNotificationsSupported] = useState(true);
+  
+  useEffect(() => {
+    setIsNotificationsSupported("Notification" in window);
+    
+    if ("Notification" in window) {
+      setPermissionStatus(Notification.permission);
+    } else {
+      setPermissionStatus("unsupported");
+    }
+  }, []);
 
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
@@ -45,7 +55,7 @@ const SettingsPage = () => {
         Settings
       </h1>
       
-      {isMobile && permissionStatus !== "granted" && (
+      {isMobile && isNotificationsSupported && permissionStatus !== "granted" && (
         <Alert>
           <Bell className="h-4 w-4" />
           <AlertTitle>Enable Notifications</AlertTitle>
