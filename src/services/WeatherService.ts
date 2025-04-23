@@ -51,7 +51,7 @@ export const fetchForecast = async (city: string): Promise<ForecastItem[]> => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     // Get current day
-    const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const today = new Date().getDay();
     
     // Group forecasts by day (taking noon forecast as representative)
     const dailyForecasts = new Map<string, any>();
@@ -78,7 +78,7 @@ export const fetchForecast = async (city: string): Promise<ForecastItem[]> => {
     // Convert the map to array and sort by date
     Array.from(dailyForecasts.values())
       .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 6) // Limit to 6 days
+      .slice(0, 7) // Changed from 6 to 7 days
       .forEach(item => {
         processed.push({
           date: item.date,
@@ -88,13 +88,13 @@ export const fetchForecast = async (city: string): Promise<ForecastItem[]> => {
         });
       });
     
-    // If we don't have 6 days yet, add forecast for future days
-    if (processed.length < 6) {
+    // If we don't have 7 days yet, add forecast for future days
+    if (processed.length < 7) { // Changed from 6 to 7
       const lastDate = processed.length > 0 
         ? new Date(processed[processed.length - 1].date) 
         : new Date();
       
-      while (processed.length < 6) {
+      while (processed.length < 7) { // Changed from 6 to 7
         lastDate.setDate(lastDate.getDate() + 1);
         const nextDay = lastDate.getDay();
         processed.push({
@@ -112,3 +112,4 @@ export const fetchForecast = async (city: string): Promise<ForecastItem[]> => {
     throw error;
   }
 };
+

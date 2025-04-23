@@ -52,7 +52,6 @@ const WeatherPage = () => {
         condition: item.condition
       })));
       
-      // Update assistant conversation with new city
       setConversation([
         { role: "assistant", content: `Hi! I'm your weather assistant for ${weatherData.location}. Ask me anything about weather, climate, or how to prepare for different conditions.` }
       ]);
@@ -92,7 +91,6 @@ const WeatherPage = () => {
   const getWeatherAssistantResponse = (query: string, weatherData: any, forecastData: any[]) => {
     const lowerQuery = query.toLowerCase();
     
-    // Handle city-related queries
     if (lowerQuery.includes("city") || 
         lowerQuery.includes("location") || 
         lowerQuery.includes("where") || 
@@ -100,13 +98,11 @@ const WeatherPage = () => {
       return `I'm currently providing weather information for ${weatherData.location}. If you'd like information for a different city, you can use the search function at the top of the screen.`;
     }
     
-    // Handle change city requests
     if ((lowerQuery.includes("change") || lowerQuery.includes("switch") || lowerQuery.includes("different")) && 
         (lowerQuery.includes("city") || lowerQuery.includes("location") || lowerQuery.includes("place"))) {
       return `To view weather for a different city, please use the search icon at the top of the screen.`;
     }
     
-    // Handle specific cities mentioned in query
     const cityRegex = /(?:in|for|at)\s+([a-zA-Z\s]+)(?:\?|$|\.)/i;
     const cityMatch = lowerQuery.match(cityRegex);
     if (cityMatch && cityMatch[1] && cityMatch[1].length > 2) {
@@ -155,7 +151,7 @@ const WeatherPage = () => {
     }
 
     if (lowerQuery.includes("forecast") || lowerQuery.includes("next few days") || lowerQuery.includes("week")) {
-      let forecastSummary = `6-day forecast for ${weatherData.location}: `;
+      let forecastSummary = `7-day forecast for ${weatherData.location}: `;
       forecastData.forEach(day => {
         forecastSummary += `${day.day}: ${day.temp}°C, ${day.condition}. `;
       });
@@ -280,8 +276,8 @@ const WeatherPage = () => {
           </Card>
           
           <div className="mt-8">
-            <h2 className="text-xl font-medium mb-4">6-Day Forecast</h2>
-            <div className="grid grid-cols-6 gap-2">
+            <h2 className="text-xl font-medium mb-4">7-Day Forecast</h2>
+            <div className="grid grid-cols-7 gap-2">
               {forecast.map((day, index) => (
                 <div key={index} className="flex flex-col items-center p-3 bg-card rounded-lg">
                   <span className="text-sm font-medium">{day.day}</span>
